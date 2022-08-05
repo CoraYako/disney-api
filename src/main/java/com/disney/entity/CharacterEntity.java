@@ -26,7 +26,7 @@ import java.util.List;
 public class CharacterEntity implements Serializable {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(generator = "uuid")
     @GenericGenerator(name = "uuid", strategy = "uuid2")
     private String id;
 
