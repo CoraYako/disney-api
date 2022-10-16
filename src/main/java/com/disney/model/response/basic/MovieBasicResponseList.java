@@ -1,4 +1,4 @@
-package com.disney.dto;
+package com.disney.model.response.basic;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,14 +11,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class GenreDTO {
+public class MovieBasicResponseList {
 
-    private String id;
-
-    private String name;
-
-    private String image;
-
-    private List<MovieDTO> movies;
-
+    private List<MovieBasicResponse> movies;
 }
