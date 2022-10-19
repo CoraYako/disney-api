@@ -46,5 +46,10 @@ public class MovieController {
                 .ok().body(service.getAll());
     }
 
-    //TODO delete a movie
+    @DeleteMapping("delete/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        service.delete(id);
+        return ResponseEntity
+                .noContent().build();
+    }
 }

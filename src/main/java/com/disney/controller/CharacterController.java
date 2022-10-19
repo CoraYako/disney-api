@@ -46,5 +46,10 @@ public class CharacterController {
                 .ok().body(service.getAll());
     }
 
-    //TODO delete a character
+    @DeleteMapping("delete/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        service.delete(id);
+        return ResponseEntity
+                .noContent().build();
+    }
 }

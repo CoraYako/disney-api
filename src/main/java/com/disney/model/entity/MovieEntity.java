@@ -1,6 +1,8 @@
 package com.disney.model.entity;
 
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
@@ -15,6 +17,8 @@ import java.util.List;
 @NoArgsConstructor
 @ToString
 @Table(name = "movies")
+@SQLDelete(sql = "UPDATE movies SET deleted=true WHERE id=?")
+@Where(clause = "deleted=false")
 public class MovieEntity implements Serializable {
 
     @Id
@@ -39,4 +43,6 @@ public class MovieEntity implements Serializable {
     @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     @JoinColumn(name = "id_genre")
     private GenreEntity genre;
+
+    private boolean deleted = Boolean.FALSE;
 }
