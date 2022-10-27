@@ -34,6 +34,7 @@ public class MovieRequest {
     private Integer rate;
 
     @NotNull(message = "List of characters are required")
+    @NotEmpty(message = "Character list cannot be empty")
     private List<CharacterResponse> charactersId;
 
     @NotNull(message = "The genre can't be null")

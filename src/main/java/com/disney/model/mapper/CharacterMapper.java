@@ -79,8 +79,8 @@ public class CharacterMapper {
         if (entity.getWeight() != null && entity.getWeight() > 0) {
             entity2Return.setWeight(entity.getWeight());
         }
-        if (request.getMoviesId() != null && !request.getMoviesId().isEmpty()) {
-            entity2Return.setMovies(request.getMoviesId().stream().map(movie -> movieService.getEntityById(movie.getId())).collect(Collectors.toList()));
+        if (entity.getHistory() != null && !entity.getHistory().trim().isEmpty()) {
+            entity2Return.setHistory(entity.getHistory());
         }
         return entity2Return;
     }

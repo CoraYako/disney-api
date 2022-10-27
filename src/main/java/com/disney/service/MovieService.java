@@ -15,8 +15,6 @@ public interface MovieService {
 
     void delete(Long id);
 
-    MovieBasicResponseList getAll();
-
     MovieEntity getEntityById(Long id);
 
     MovieResponse getResponseById(Long id);
@@ -24,4 +22,6 @@ public interface MovieService {
     MovieEntity getEntityByTitle(String title);
 
     List<MovieEntity> getMoviesById(List<MovieResponse> moviesId);
+
+    MovieBasicResponseList getByFilters(String title, Long genre, String order);
 }

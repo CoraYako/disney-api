@@ -15,8 +15,6 @@ public interface CharacterService {
 
     void delete(Long id);
 
-    CharacterBasicResponseList getAll();
-
     CharacterEntity getEntityById(Long id);
 
     List<CharacterEntity> getCharactersById(List<CharacterResponse> charactersId);
@@ -24,4 +22,6 @@ public interface CharacterService {
     CharacterResponse getResponseById(Long id);
 
     CharacterEntity getEntityByName(String name);
+
+    CharacterBasicResponseList getByFilters(String name, Integer age, List<Long> movies);
 }

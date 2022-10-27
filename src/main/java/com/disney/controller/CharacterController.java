@@ -11,6 +11,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -28,7 +29,7 @@ public class CharacterController {
     }
 
     @PutMapping("update/{id}")
-    public ResponseEntity<CharacterResponse> update(@PathVariable Long id, @RequestBody CharacterRequest request) {
+    public ResponseEntity<CharacterResponse> updateById(@PathVariable Long id, @RequestBody CharacterRequest request) {
         CharacterResponse response = service.update(id, request);
         return ResponseEntity
                 .ok().body(response);
@@ -41,13 +42,16 @@ public class CharacterController {
     }
 
     @GetMapping("characters")
-    public ResponseEntity<CharacterBasicResponseList> getList() {
+    public ResponseEntity<CharacterBasicResponseList> getList(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Integer age,
+            @RequestParam(required = false) List<Long> movies) {
         return ResponseEntity
-                .ok().body(service.getAll());
+                .ok().body(service.getByFilters(name, age, movies));
     }
 
     @DeleteMapping("delete/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteById(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity
                 .noContent().build();

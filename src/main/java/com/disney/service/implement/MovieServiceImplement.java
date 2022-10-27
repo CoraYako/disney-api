@@ -2,10 +2,12 @@ package com.disney.service.implement;
 
 import com.disney.model.entity.MovieEntity;
 import com.disney.model.mapper.MovieMapper;
+import com.disney.model.request.MovieFilterRequest;
 import com.disney.model.request.MovieRequest;
 import com.disney.model.response.MovieResponse;
 import com.disney.model.response.basic.MovieBasicResponseList;
 import com.disney.repository.MovieRepository;
+import com.disney.repository.specification.MovieSpecification;
 import com.disney.service.MovieService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -24,6 +27,8 @@ public class MovieServiceImplement implements MovieService {
     private final MovieRepository repository;
 
     private final MovieMapper mapper;
+
+    private final MovieSpecification specification;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -55,12 +60,6 @@ public class MovieServiceImplement implements MovieService {
 
     @Override
     @Transactional(readOnly = true)
-    public MovieBasicResponseList getAll() {
-        return mapper.entityList2DTOList(repository.findAll());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public MovieEntity getEntityById(Long id) {
         Optional<MovieEntity> response = repository.findById(id);
         return response.orElseThrow(() -> new EntityNotFoundException("Movie not found= null"));
@@ -82,5 +81,15 @@ public class MovieServiceImplement implements MovieService {
     @Transactional(readOnly = true)
     public List<MovieEntity> getMoviesById(List<MovieResponse> moviesId) {
         return moviesId.stream().map(movie -> getEntityById(movie.getId())).collect(Collectors.toList());
+    }
+
+    @Override
+    public MovieBasicResponseList getByFilters(String title, Long genre, String order) {
+        List<MovieEntity> entityList = repository.findAll(
+                specification.getByFilters(new MovieFilterRequest(title, genre, order)));
+        if (entityList.isEmpty()) {
+            throw new NoSuchElementException("Movie was not found for parameters {title=" + title + ", genre=" + genre + '}');
+        }
+        return mapper.entityList2DTOList(entityList);
     }
 }

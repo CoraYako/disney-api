@@ -2,10 +2,12 @@ package com.disney.service.implement;
 
 import com.disney.model.entity.CharacterEntity;
 import com.disney.model.mapper.CharacterMapper;
+import com.disney.model.request.CharacterFilterRequest;
 import com.disney.model.request.CharacterRequest;
 import com.disney.model.response.CharacterResponse;
 import com.disney.model.response.basic.CharacterBasicResponseList;
 import com.disney.repository.CharacterRepository;
+import com.disney.repository.specification.CharacterSpecification;
 import com.disney.service.CharacterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -24,6 +27,8 @@ public class CharacterServiceImplement implements CharacterService {
     private final CharacterMapper mapper;
 
     private final CharacterRepository repository;
+
+    private final CharacterSpecification specification;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -55,12 +60,6 @@ public class CharacterServiceImplement implements CharacterService {
 
     @Override
     @Transactional(readOnly = true)
-    public CharacterBasicResponseList getAll() {
-        return mapper.entityList2DTOList(repository.findAll());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public CharacterEntity getEntityById(Long id) {
         Optional<CharacterEntity> response = repository.findById(id);
         return response.orElseThrow(() -> new EntityNotFoundException("Character not found"));
@@ -82,5 +81,16 @@ public class CharacterServiceImplement implements CharacterService {
     public CharacterEntity getEntityByName(String name) {
         Optional<CharacterEntity> response = repository.findByName(name);
         return response.orElse(null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CharacterBasicResponseList getByFilters(String name, Integer age, List<Long> movies) {
+        List<CharacterEntity> entityList = repository.findAll(
+                specification.getByFilters(new CharacterFilterRequest(name, age, movies)));
+        if (entityList.isEmpty()) {
+            throw new NoSuchElementException("Character was not found for parameters {name=" + name + ", age=" + age + ", movies=" + movies + '}');
+        }
+        return mapper.entityList2DTOList(entityList);
     }
 }

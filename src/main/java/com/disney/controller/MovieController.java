@@ -11,6 +11,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -41,9 +42,13 @@ public class MovieController {
     }
 
     @GetMapping("movies")
-    public ResponseEntity<MovieBasicResponseList> getList() {
+    public ResponseEntity<MovieBasicResponseList> getList(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) Long genre,
+            @RequestParam(required = false, defaultValue = "ASC") String order
+            ) {
         return ResponseEntity
-                .ok().body(service.getAll());
+                .ok().body(service.getByFilters(title, genre, order));
     }
 
     @DeleteMapping("delete/{id}")
