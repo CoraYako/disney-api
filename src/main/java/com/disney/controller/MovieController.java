@@ -11,7 +11,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -31,6 +30,20 @@ public class MovieController {
     @PutMapping("update/{id}")
     public ResponseEntity<MovieResponse> update(@PathVariable Long id, @RequestBody MovieRequest request) {
         MovieResponse response = service.update(id, request);
+        return ResponseEntity
+                .ok().body(response);
+    }
+
+    @PutMapping("{idMovie}/characters/{idCharacter}")
+    public ResponseEntity<MovieResponse> addCharacter(@PathVariable Long idMovie, @PathVariable Long idCharacter) {
+        MovieResponse response = service.addCharacter(idMovie, idCharacter);
+        return ResponseEntity
+                .ok().body(response);
+    }
+
+    @DeleteMapping("{idMovie}/characters/{idCharacter}")
+    public ResponseEntity<MovieResponse> removeCharacter(@PathVariable Long idMovie, @PathVariable Long idCharacter) {
+        MovieResponse response = service.removeCharacter(idMovie, idCharacter);
         return ResponseEntity
                 .ok().body(response);
     }

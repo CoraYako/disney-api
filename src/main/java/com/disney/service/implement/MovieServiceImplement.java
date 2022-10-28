@@ -1,5 +1,6 @@
 package com.disney.service.implement;
 
+import com.disney.model.entity.CharacterEntity;
 import com.disney.model.entity.MovieEntity;
 import com.disney.model.mapper.MovieMapper;
 import com.disney.model.request.MovieFilterRequest;
@@ -8,6 +9,7 @@ import com.disney.model.response.MovieResponse;
 import com.disney.model.response.basic.MovieBasicResponseList;
 import com.disney.repository.MovieRepository;
 import com.disney.repository.specification.MovieSpecification;
+import com.disney.service.CharacterService;
 import com.disney.service.MovieService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,8 @@ public class MovieServiceImplement implements MovieService {
     private final MovieMapper mapper;
 
     private final MovieSpecification specification;
+
+    private final CharacterService characterService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -59,6 +63,27 @@ public class MovieServiceImplement implements MovieService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public MovieResponse addCharacter(Long id, Long characterId) {
+        MovieEntity entityFound = getEntityById(id);
+        CharacterEntity character = characterService.getEntityById(characterId);
+        if (entityFound.getCharacters().contains(character)) {
+            throw new IllegalArgumentException(String.format("The character %s is already in the character's movie list", character.getName()));
+        }
+        entityFound.getCharacters().add(character);
+        return mapper.entity2DTO(repository.save(entityFound));
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public MovieResponse removeCharacter(Long id, Long characterId) {
+        MovieEntity entityFound = getEntityById(id);
+        CharacterEntity character = characterService.getEntityById(characterId);
+        entityFound.getCharacters().remove(character);
+        return mapper.entity2DTO(repository.save(entityFound));
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public MovieEntity getEntityById(Long id) {
         Optional<MovieEntity> response = repository.findById(id);
@@ -84,6 +109,7 @@ public class MovieServiceImplement implements MovieService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public MovieBasicResponseList getByFilters(String title, Long genre, String order) {
         List<MovieEntity> entityList = repository.findAll(
                 specification.getByFilters(new MovieFilterRequest(title, genre, order)));

@@ -15,6 +15,10 @@ public interface MovieService {
 
     void delete(Long id);
 
+    MovieResponse addCharacter(Long id, Long characterId);
+
+    MovieResponse removeCharacter(Long id, Long characterId);
+
     MovieEntity getEntityById(Long id);
 
     MovieResponse getResponseById(Long id);

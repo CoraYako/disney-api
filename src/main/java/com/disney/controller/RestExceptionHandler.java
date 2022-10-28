@@ -94,4 +94,14 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         );
         return handleExceptionInternal(ex, apiErrorResponse, new HttpHeaders(), apiErrorResponse.getStatus(), request);
     }
+
+    @ExceptionHandler(value = IllegalArgumentException.class)
+    protected ResponseEntity<Object> handleIllegalArgument(IllegalArgumentException ex, WebRequest request) {
+        ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
+                CONFLICT,
+                ex.getMessage(),
+                Collections.singletonList("Duplicate object")
+        );
+        return handleExceptionInternal(ex, apiErrorResponse, new HttpHeaders(), apiErrorResponse.getStatus(), request);
+    }
 }
