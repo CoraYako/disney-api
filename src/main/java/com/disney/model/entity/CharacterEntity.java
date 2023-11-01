@@ -1,11 +1,12 @@
 package com.disney.model.entity;
 
+import jakarta.persistence.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
-import jakarta.persistence.*;
 import java.io.Serializable;
-import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "characters")
@@ -13,14 +14,14 @@ import java.util.List;
 @Where(clause = "deleted=false")
 public class CharacterEntity implements Serializable {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
     private String image;
     private String name;
-    private Integer age;
-    private Double weight;
+    private int age;
+    private double weight;
     private String history;
     @ManyToMany(mappedBy = "characters", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
-    private List<MovieEntity> movies;
+    private Set<MovieEntity> movies;
     private boolean deleted = Boolean.FALSE;
 }
