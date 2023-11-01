@@ -4,21 +4,23 @@ import com.disney.model.request.CharacterRequest;
 import com.disney.model.response.CharacterResponse;
 import com.disney.model.response.basic.CharacterBasicResponseList;
 import com.disney.service.CharacterService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/character")
 public class CharacterController {
 
     private final CharacterService service;
+
+    public CharacterController(CharacterService service) {
+        this.service = service;
+    }
 
     @PostMapping("save")
     public ResponseEntity<CharacterResponse> save(@Valid @RequestBody CharacterRequest request) {

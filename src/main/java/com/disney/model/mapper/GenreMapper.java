@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
-@RequiredArgsConstructor
 public class GenreMapper {
 
     public GenreEntity DTO2Entity(GenreRequest request) {

@@ -6,21 +6,24 @@ import com.disney.model.request.GenreRequest;
 import com.disney.model.response.GenreResponse;
 import com.disney.repository.GenreRepository;
 import com.disney.service.GenreService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityExistsException;
-import javax.persistence.EntityNotFoundException;
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityNotFoundException;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 public class GenreServiceImplement implements GenreService {
 
     private final GenreRepository repository;
 
     private final GenreMapper mapper;
+
+    public GenreServiceImplement(GenreRepository repository, GenreMapper mapper) {
+        this.repository = repository;
+        this.mapper = mapper;
+    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)

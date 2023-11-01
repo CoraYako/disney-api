@@ -3,20 +3,22 @@ package com.disney.controller;
 import com.disney.model.request.GenreRequest;
 import com.disney.model.response.GenreResponse;
 import com.disney.service.GenreService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.net.URI;
 
 @RestController
 @RequestMapping("/api/genre")
-@RequiredArgsConstructor
 public class GenreController {
 
     private final GenreService service;
+
+    public GenreController(GenreService service) {
+        this.service = service;
+    }
 
     @PostMapping("save")
     public ResponseEntity<GenreResponse> save(@Valid @RequestBody GenreRequest request) {

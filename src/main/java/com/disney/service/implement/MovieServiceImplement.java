@@ -11,19 +11,17 @@ import com.disney.repository.MovieRepository;
 import com.disney.repository.specification.MovieSpecification;
 import com.disney.service.CharacterService;
 import com.disney.service.MovieService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityExistsException;
-import javax.persistence.EntityNotFoundException;
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class MovieServiceImplement implements MovieService {
 
     private final MovieRepository repository;
@@ -33,6 +31,13 @@ public class MovieServiceImplement implements MovieService {
     private final MovieSpecification specification;
 
     private final CharacterService characterService;
+
+    public MovieServiceImplement(MovieRepository repository, MovieMapper mapper, MovieSpecification specification, CharacterService characterService) {
+        this.repository = repository;
+        this.mapper = mapper;
+        this.specification = specification;
+        this.characterService = characterService;
+    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)

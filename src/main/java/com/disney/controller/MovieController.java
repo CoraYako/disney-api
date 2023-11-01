@@ -4,20 +4,22 @@ import com.disney.model.request.MovieRequest;
 import com.disney.model.response.MovieResponse;
 import com.disney.model.response.basic.MovieBasicResponseList;
 import com.disney.service.MovieService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.net.URI;
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/movie")
 public class MovieController {
 
     private final MovieService service;
+
+    public MovieController(MovieService service) {
+        this.service = service;
+    }
 
     @PostMapping("save")
     public ResponseEntity<MovieResponse> save(@Valid @RequestBody MovieRequest request) {

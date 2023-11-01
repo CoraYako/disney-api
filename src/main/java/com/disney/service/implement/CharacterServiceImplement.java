@@ -9,19 +9,17 @@ import com.disney.model.response.basic.CharacterBasicResponseList;
 import com.disney.repository.CharacterRepository;
 import com.disney.repository.specification.CharacterSpecification;
 import com.disney.service.CharacterService;
-import lombok.RequiredArgsConstructor;
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityExistsException;
-import javax.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class CharacterServiceImplement implements CharacterService {
 
     private final CharacterMapper mapper;
@@ -29,6 +27,12 @@ public class CharacterServiceImplement implements CharacterService {
     private final CharacterRepository repository;
 
     private final CharacterSpecification specification;
+
+    public CharacterServiceImplement(CharacterMapper mapper, CharacterRepository repository, CharacterSpecification specification) {
+        this.mapper = mapper;
+        this.repository = repository;
+        this.specification = specification;
+    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)

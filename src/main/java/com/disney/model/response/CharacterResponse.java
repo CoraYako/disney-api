@@ -1,14 +1,10 @@
 package com.disney.model.response;
 
 import com.disney.model.response.basic.MovieBasicResponse;
-import lombok.*;
 
 import java.util.List;
 
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
+
 public class CharacterResponse {
 
     private Long id;

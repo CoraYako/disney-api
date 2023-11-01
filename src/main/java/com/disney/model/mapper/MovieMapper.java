@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
-@RequiredArgsConstructor
 public class MovieMapper {
 
     private final CharacterMapper characterMapper;
@@ -26,6 +25,13 @@ public class MovieMapper {
     private final GenreMapper genreMapper;
 
     private final GenreService genreService;
+
+    public MovieMapper(CharacterMapper characterMapper, CharacterService characterService, GenreMapper genreMapper, GenreService genreService) {
+        this.characterMapper = characterMapper;
+        this.characterService = characterService;
+        this.genreMapper = genreMapper;
+        this.genreService = genreService;
+    }
 
     public MovieEntity DTO2Entity(MovieRequest request) {
         MovieEntity entity = new MovieEntity();

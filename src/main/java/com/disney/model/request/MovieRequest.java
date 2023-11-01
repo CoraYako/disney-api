@@ -2,18 +2,11 @@ package com.disney.model.request;
 
 import com.disney.model.response.CharacterResponse;
 import com.disney.model.response.GenreResponse;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-import javax.validation.constraints.*;
+import jakarta.validation.constraints.*;
 import java.util.List;
 
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
+
 public class MovieRequest {
 
     @NotEmpty(message = "The image cant be empty or null")
