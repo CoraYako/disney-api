@@ -1,20 +1,10 @@
 package com.disney.repository;
 
-import com.disney.model.entity.MovieEntity;
-import org.springframework.data.jpa.domain.Specification;
+import com.disney.model.entity.Movie;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-import java.util.List;
-import java.util.Optional;
+public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecificationExecutor<Movie> {
 
-@Repository
-public interface MovieRepository extends JpaRepository<MovieEntity, Long> {
-
-    @Query(value = "SELECT * FROM movies WHERE title LIKE :title", nativeQuery = true)
-    Optional<MovieEntity> findByTitle(@Param("title") String title);
-
-    List<MovieEntity> findAll(Specification<MovieEntity> specification);
+    boolean existsByTitle(String title);
 }
