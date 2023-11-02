@@ -6,7 +6,7 @@ import com.disney.model.dto.response.basic.GenreBasicResponseDto;
 import java.util.Set;
 
 public record MovieResponseDto(
-        Long id,
+        String id,
         String image,
         String title,
         String creationDate,

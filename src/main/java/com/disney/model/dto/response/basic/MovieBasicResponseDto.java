@@ -3,7 +3,7 @@ package com.disney.model.dto.response.basic;
 import java.util.Set;
 
 public record MovieBasicResponseDto(
-        Long id,
+        String id,
         String image,
         String title,
         String creationDate,

@@ -5,7 +5,7 @@ import com.disney.model.dto.response.basic.MovieBasicInfoResponseDto;
 import java.util.Set;
 
 public record CharacterResponseDto(
-        Long id,
+        String id,
         String image,
         String name,
         int age,

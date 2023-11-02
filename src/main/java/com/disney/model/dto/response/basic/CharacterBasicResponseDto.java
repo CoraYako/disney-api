@@ -1,7 +1,7 @@
 package com.disney.model.dto.response.basic;
 
 public record CharacterBasicResponseDto(
-        Long id,
+        String id,
         String image,
         String name,
         int age,
