@@ -1,31 +1,22 @@
 package com.disney.service;
 
-import com.disney.model.entity.MovieEntity;
-import com.disney.model.request.MovieRequest;
-import com.disney.model.response.MovieResponse;
-import com.disney.model.response.basic.MovieBasicResponseList;
+import com.disney.model.dto.request.MovieRequestDto;
+import com.disney.model.dto.request.MovieUpdateRequestDto;
+import com.disney.model.dto.response.MovieResponseDto;
+import jakarta.validation.constraints.NotNull;
+import org.springframework.data.domain.Page;
 
-import java.util.List;
+import java.util.UUID;
 
 public interface MovieService {
 
-    MovieResponse save(MovieRequest request);
+    void createMovie(@NotNull MovieRequestDto requestDto);
 
-    MovieResponse update(Long id, MovieRequest request);
+    MovieResponseDto updateMovie(@NotNull UUID id, @NotNull MovieUpdateRequestDto request);
 
-    void delete(Long id);
+    void deleteMovie(@NotNull UUID id);
 
-    MovieResponse addCharacter(Long id, Long characterId);
+    MovieResponseDto getMovieDtoById(@NotNull UUID id);
 
-    MovieResponse removeCharacter(Long id, Long characterId);
-
-    MovieEntity getEntityById(Long id);
-
-    MovieResponse getResponseById(Long id);
-
-    MovieEntity getEntityByTitle(String title);
-
-    List<MovieEntity> getMoviesById(List<MovieResponse> moviesId);
-
-    MovieBasicResponseList getByFilters(String title, Long genre, String order);
+    Page<MovieResponseDto> listMovies(@NotNull int pageNumber, String title, String genre, String order);
 }
