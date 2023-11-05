@@ -1,75 +1,52 @@
 package com.disney.controller;
 
-import com.disney.model.request.MovieRequest;
-import com.disney.model.response.MovieResponse;
-import com.disney.model.response.basic.MovieBasicResponseList;
+import com.disney.model.dto.request.MovieRequestDto;
+import com.disney.model.dto.request.MovieUpdateRequestDto;
+import com.disney.model.dto.response.MovieResponseDto;
 import com.disney.service.MovieService;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
-import jakarta.validation.Valid;
-import java.net.URI;
 
 @RestController
-@RequestMapping("/api/movie")
+@RequestMapping("/api/v1/movies")
 public class MovieController {
+    private final MovieService movieService;
 
-    private final MovieService service;
-
-    public MovieController(MovieService service) {
-        this.service = service;
+    public MovieController(MovieService movieService) {
+        this.movieService = movieService;
     }
 
-    @PostMapping("save")
-    public ResponseEntity<MovieResponse> save(@Valid @RequestBody MovieRequest request) {
-        MovieResponse response = service.save(request);
-        URI uri = URI.create(ServletUriComponentsBuilder.fromCurrentContextPath().path("/save").toString());
-        return ResponseEntity
-                .created(uri).body(response);
+    @PostMapping
+    public ResponseEntity<Void> createMovie(@Valid @RequestBody MovieRequestDto requestDto) {
+        movieService.createMovie(requestDto);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @PutMapping("update/{id}")
-    public ResponseEntity<MovieResponse> update(@PathVariable Long id, @RequestBody MovieRequest request) {
-        MovieResponse response = service.update(id, request);
-        return ResponseEntity
-                .ok().body(response);
+    @PatchMapping("/{movieId}")
+    public ResponseEntity<MovieResponseDto> updateMovie(@PathVariable String movieId,
+                                                        @RequestBody MovieUpdateRequestDto requestDto) {
+        return ResponseEntity.status(HttpStatus.OK).body(movieService.updateMovie(movieId, requestDto));
     }
 
-    @PutMapping("{idMovie}/characters/{idCharacter}")
-    public ResponseEntity<MovieResponse> addCharacter(@PathVariable Long idMovie, @PathVariable Long idCharacter) {
-        MovieResponse response = service.addCharacter(idMovie, idCharacter);
-        return ResponseEntity
-                .ok().body(response);
+    @GetMapping("/{movieId}")
+    public ResponseEntity<MovieResponseDto> getMovie(@PathVariable String movieId) {
+        return ResponseEntity.status(HttpStatus.OK).body(movieService.getMovieById(movieId));
     }
 
-    @DeleteMapping("{idMovie}/characters/{idCharacter}")
-    public ResponseEntity<MovieResponse> removeCharacter(@PathVariable Long idMovie, @PathVariable Long idCharacter) {
-        MovieResponse response = service.removeCharacter(idMovie, idCharacter);
-        return ResponseEntity
-                .ok().body(response);
+    @GetMapping
+    public ResponseEntity<Page<MovieResponseDto>> listMovies(
+            @RequestParam(required = false, name = "page") int pageNumber, @RequestParam(required = false) String title,
+            @RequestParam(required = false) String genre,
+            @RequestParam(required = false, defaultValue = "ASC") String order) {
+        return ResponseEntity.status(HttpStatus.OK).body(movieService.listMovies(pageNumber, title, genre, order));
     }
 
-    @GetMapping("{id}")
-    public ResponseEntity<MovieResponse> getOne(@PathVariable Long id) {
-        return ResponseEntity
-                .ok().body(service.getResponseById(id));
-    }
-
-    @GetMapping("movies")
-    public ResponseEntity<MovieBasicResponseList> getList(
-            @RequestParam(required = false) String title,
-            @RequestParam(required = false) Long genre,
-            @RequestParam(required = false, defaultValue = "ASC") String order
-            ) {
-        return ResponseEntity
-                .ok().body(service.getByFilters(title, genre, order));
-    }
-
-    @DeleteMapping("delete/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        service.delete(id);
-        return ResponseEntity
-                .noContent().build();
+    @DeleteMapping("/{movieId}")
+    public ResponseEntity<Void> deleteMovie(@PathVariable String movieId) {
+        movieService.deleteMovie(movieId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

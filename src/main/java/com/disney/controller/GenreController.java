@@ -1,44 +1,37 @@
 package com.disney.controller;
 
-import com.disney.model.request.GenreRequest;
-import com.disney.model.response.GenreResponse;
+import com.disney.model.dto.request.GenreRequestDto;
+import com.disney.model.dto.request.GenreUpdateRequestDto;
+import com.disney.model.dto.response.GenreResponseDto;
 import com.disney.service.GenreService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
-import jakarta.validation.Valid;
-import java.net.URI;
 
 @RestController
-@RequestMapping("/api/genre")
+@RequestMapping("/api/v1/genres")
 public class GenreController {
+    private final GenreService genreService;
 
-    private final GenreService service;
-
-    public GenreController(GenreService service) {
-        this.service = service;
+    public GenreController(GenreService genreService) {
+        this.genreService = genreService;
     }
 
-    @PostMapping("save")
-    public ResponseEntity<GenreResponse> save(@Valid @RequestBody GenreRequest request) {
-        GenreResponse response = service.save(request);
-        URI uri = URI.create(ServletUriComponentsBuilder.fromCurrentContextPath().path("/save").toString());
-        return ResponseEntity
-                .created(uri).body(response);
+    @PostMapping
+    public ResponseEntity<Void> createMovieGenre(@Valid @RequestBody GenreRequestDto requestDto) {
+        genreService.createGenre(requestDto);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @PutMapping("update/{id}")
-    public ResponseEntity<GenreResponse> update(@PathVariable Long id, @RequestBody GenreRequest request) {
-        GenreResponse response = service.update(id, request);
-        return ResponseEntity
-                .ok().body(response);
+    @PatchMapping("/{genreId}")
+    public ResponseEntity<GenreResponseDto> updateGenreById(@PathVariable String genreId,
+                                                            @RequestBody GenreUpdateRequestDto requestDto) {
+        return ResponseEntity.status(HttpStatus.OK).body(genreService.updateGenre(genreId, requestDto));
     }
 
-    @GetMapping("{id}")
-    public ResponseEntity<GenreResponse> getOne(@PathVariable Long id) {
-        GenreResponse response = service.getResponseById(id);
-        return ResponseEntity
-                .ok().body(response);
+    @GetMapping("/{genreId}")
+    public ResponseEntity<GenreResponseDto> getGenre(@PathVariable String genreId) {
+        return ResponseEntity.status(HttpStatus.OK).body(genreService.getGenreById(genreId));
     }
 }
