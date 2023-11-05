@@ -1,39 +1,39 @@
 package com.disney.repository.specification;
 
-import com.disney.model.entity.CharacterEntity;
-import com.disney.model.entity.GenreEntity;
-import com.disney.model.entity.MovieEntity;
-import com.disney.model.request.MovieFilterRequest;
+import com.disney.model.entity.Genre;
+import com.disney.model.entity.Movie;
+import com.disney.util.ApiUtils;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Predicate;
 import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class MovieSpecification {
 
-    public Specification<MovieEntity> getByFilters(MovieFilterRequest filterRequest) {
+    public Specification<Movie> getByFilters(String title, String genre, String order) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
-            if (StringUtils.hasLength(filterRequest.getTitle())) {
-                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("title")), '%' + filterRequest.getTitle() + '%'));
+            if (StringUtils.hasLength(title)) {
+                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("title")), '%' + title + '%'));
             }
-            if (filterRequest.getGenre() != null) {
-                Join<GenreEntity, MovieEntity> join = root.join("genre", JoinType.LEFT);
-                Expression<String> genreId = join.get("id");
-                predicates.add(genreId.in(filterRequest.getGenre()));
+            if (!StringUtils.hasLength(genre)) {
+                Join<Genre, Movie> join = root.join("genre", JoinType.LEFT);
+                Expression<String> genreId = join.get("genre_id");
+                predicates.add(genreId.in(genre));
             }
             query.distinct(true);
             String orderByField = "creation";
             query.orderBy(
-                    filterRequest.isASC() ?
-                            criteriaBuilder.asc(root.get(orderByField)) :
+                    ApiUtils.isASC(order) ?
+                            criteriaBuilder.asc(root.get(orderByField))
+                            :
                             criteriaBuilder.desc(root.get(orderByField))
             );
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
