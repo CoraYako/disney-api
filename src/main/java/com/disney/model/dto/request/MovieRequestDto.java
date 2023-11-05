@@ -16,9 +16,11 @@ public record MovieRequestDto(
         @NotNull
         @Min(value = 1, message = "Positive values only, the minimum is 1")
         @Max(value = 5, message = "Positive values only, the maximum is 5")
-        Integer rate,
+        int rate,
         @NotNull(message = "The genre can't be null")
-        GenreResponseDto genreId,
+        String genreId,
+        @NotNull
+        @NotEmpty
         Set<String> charactersId
 ) {
 }
