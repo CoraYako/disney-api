@@ -8,6 +8,7 @@ public record CharacterUpdateRequestDto(
         int age,
         double weight,
         String history,
-        Set<String> moviesId
+        Set<String> moviesWhereAppears,
+        Set<String> moviesToUnlink
 ) {
 }

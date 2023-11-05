@@ -8,6 +8,7 @@ import com.disney.model.mapper.CharacterMapper;
 import com.disney.repository.CharacterRepository;
 import com.disney.repository.specification.CharacterSpecification;
 import com.disney.service.CharacterService;
+import com.disney.service.MovieService;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
@@ -15,12 +16,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Validated
@@ -28,13 +31,14 @@ public class CharacterServiceImpl implements CharacterService {
     private final CharacterMapper characterMapper;
     private final CharacterRepository characterRepository;
     private final CharacterSpecification characterSpec;
+    private final MovieService movieService;
 
-    public CharacterServiceImpl(CharacterMapper characterMapper,
-                                CharacterRepository characterRepository,
-                                CharacterSpecification characterSpec) {
+    public CharacterServiceImpl(CharacterMapper characterMapper, CharacterRepository characterRepository,
+                                CharacterSpecification characterSpec, MovieService movieService) {
         this.characterMapper = characterMapper;
         this.characterRepository = characterRepository;
         this.characterSpec = characterSpec;
+        this.movieService = movieService;
     }
 
     @Override
@@ -59,18 +63,31 @@ public class CharacterServiceImpl implements CharacterService {
             throw new IllegalArgumentException("Invalid parameter provided: Character to update");
         if (characterRepository.existsByName(updateRequestDto.name()))
             throw new EntityExistsException("The character %s already exists".formatted(updateRequestDto.name()));
-        Character character = characterRepository.findById(UUID.fromString(id))
+        Character characterToUpdate = characterRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new EntityNotFoundException("Character not found for ID %s".formatted(id)));
         // update values of the current founded character
-        character.setImage(updateRequestDto.image());
-        character.setName(updateRequestDto.name());
-        character.setAge(updateRequestDto.age());
-        character.setWeight(updateRequestDto.weight());
-        character.setHistory(updateRequestDto.history());
+        characterToUpdate.setImage(updateRequestDto.image());
+        characterToUpdate.setName(updateRequestDto.name());
+        characterToUpdate.setAge(updateRequestDto.age());
+        characterToUpdate.setWeight(updateRequestDto.weight());
+        characterToUpdate.setHistory(updateRequestDto.history());
 
-        // TODO: 4/11/2023 find movies if the list of moviesId aren't null
+        // takes the movies where the character appears
+        if (!CollectionUtils.isEmpty(updateRequestDto.moviesWhereAppears()))
+            characterToUpdate.getMovies().addAll(
+                    updateRequestDto.moviesWhereAppears().stream()
+                            .map(movieId -> movieService.getMovieById(UUID.fromString(movieId)))
+                            .collect(Collectors.toUnmodifiableSet())
+            );
 
-        return characterMapper.toDTO(characterRepository.save(character));
+        // remove the movies where the current character doesn't appear
+        if (!CollectionUtils.isEmpty(updateRequestDto.moviesToUnlink()))
+            characterToUpdate.getMovies().removeAll(
+                    updateRequestDto.moviesToUnlink().stream()
+                            .map(movieId -> movieService.getMovieById(UUID.fromString(movieId)))
+                            .collect(Collectors.toUnmodifiableSet())
+            );
+        return characterMapper.toDTO(characterRepository.save(characterToUpdate));
     }
 
     @Override
