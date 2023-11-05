@@ -12,9 +12,9 @@ public interface GenreService {
 
     void createGenre(@NotNull GenreRequestDto requestDto);
 
-    GenreResponseDto updateGenre(@NotNull UUID id, GenreUpdateRequestDto requestDto);
+    GenreResponseDto updateGenre(@NotNull String id, GenreUpdateRequestDto requestDto);
 
-    GenreResponseDto getGenreDtoById(@NotNull UUID id);
+    GenreResponseDto getGenreById(@NotNull String id);
 
     Genre getGenreById(@NotNull UUID id);
 }

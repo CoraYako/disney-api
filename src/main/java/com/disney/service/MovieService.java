@@ -6,17 +6,15 @@ import com.disney.model.dto.response.MovieResponseDto;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 
-import java.util.UUID;
-
 public interface MovieService {
 
     void createMovie(@NotNull MovieRequestDto requestDto);
 
-    MovieResponseDto updateMovie(@NotNull UUID id, @NotNull MovieUpdateRequestDto request);
+    MovieResponseDto updateMovie(@NotNull String id, @NotNull MovieUpdateRequestDto request);
 
-    void deleteMovie(@NotNull UUID id);
+    void deleteMovie(@NotNull String id);
 
-    MovieResponseDto getMovieDtoById(@NotNull UUID id);
+    MovieResponseDto getMovieById(@NotNull String id);
 
     Page<MovieResponseDto> listMovies(@NotNull int pageNumber, String title, String genre, String order);
 }

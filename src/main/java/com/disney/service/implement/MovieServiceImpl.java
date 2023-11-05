@@ -67,12 +67,12 @@ public class MovieServiceImpl implements MovieService {
             EntityExistsException.class,
             EntityNotFoundException.class
     })
-    public MovieResponseDto updateMovie(UUID id, MovieUpdateRequestDto requestDto) {
+    public MovieResponseDto updateMovie(String id, MovieUpdateRequestDto requestDto) {
         if (Objects.isNull(id) || Objects.isNull(requestDto) || !StringUtils.hasLength(requestDto.title()))
             throw new IllegalArgumentException("Invalid argument passed: movie");
         if (movieRepository.existsByTitle(requestDto.title()))
             throw new EntityExistsException("The movie %s already exist".formatted(requestDto.title()));
-        Movie movieToUpdate = movieRepository.findById(id)
+        Movie movieToUpdate = movieRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new EntityNotFoundException("Movie not found for ID %s".formatted(id)));
         movieToUpdate.setImage(requestDto.image());
         movieToUpdate.setTitle(requestDto.title());
@@ -99,20 +99,20 @@ public class MovieServiceImpl implements MovieService {
 
     @Override
     @Transactional(rollbackFor = {IllegalArgumentException.class, EntityNotFoundException.class})
-    public void deleteMovie(UUID id) {
+    public void deleteMovie(String id) {
         if (Objects.isNull(id))
             throw new IllegalArgumentException("The provided ID is invalid or null");
-        Movie movieFound = movieRepository.findById(id)
+        Movie movieFound = movieRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new EntityNotFoundException("Movie not found for ID %s".formatted(id)));
         movieRepository.delete(movieFound);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public MovieResponseDto getMovieDtoById(UUID id) {
+    public MovieResponseDto getMovieById(String id) {
         if (Objects.isNull(id))
             throw new IllegalArgumentException("The provided Movie ID is invalid");
-        Movie movieFound = movieRepository.findById(id)
+        Movie movieFound = movieRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new EntityNotFoundException("Movie not found for ID %s".formatted(id)));
         return movieMapper.toDTO(movieFound);
     }

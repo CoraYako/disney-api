@@ -54,12 +54,12 @@ public class CharacterServiceImpl implements CharacterService {
             EntityExistsException.class,
             EntityNotFoundException.class
     })
-    public CharacterResponseDto updateCharacter(UUID id, CharacterUpdateRequestDto updateRequestDto) {
+    public CharacterResponseDto updateCharacter(String id, CharacterUpdateRequestDto updateRequestDto) {
         if (Objects.isNull(id) || Objects.isNull(updateRequestDto) || !StringUtils.hasLength(updateRequestDto.name()))
             throw new IllegalArgumentException("Invalid parameter provided: Character to update");
         if (characterRepository.existsByName(updateRequestDto.name()))
             throw new EntityExistsException("The character %s already exists".formatted(updateRequestDto.name()));
-        Character character = characterRepository.findById(id)
+        Character character = characterRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new EntityNotFoundException("Character not found for ID %s".formatted(id)));
         // update values of the current founded character
         character.setImage(updateRequestDto.image());
@@ -75,10 +75,10 @@ public class CharacterServiceImpl implements CharacterService {
 
     @Override
     @Transactional(rollbackFor = {IllegalArgumentException.class, EntityNotFoundException.class})
-    public void deleteCharacter(UUID id) {
+    public void deleteCharacter(String id) {
         if (Objects.isNull(id))
             throw new IllegalArgumentException("The provided ID is invalid or null");
-        Character characterToDelete = characterRepository.findById(id)
+        Character characterToDelete = characterRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new EntityNotFoundException("Character not found for ID %s".formatted(id)));
         characterRepository.delete(characterToDelete);
     }
@@ -95,10 +95,10 @@ public class CharacterServiceImpl implements CharacterService {
 
     @Override
     @Transactional(readOnly = true)
-    public CharacterResponseDto getCharacterDtoById(UUID id) {
+    public CharacterResponseDto getCharacterById(String id) {
         if (Objects.isNull(id))
             throw new IllegalArgumentException("Invalid parameter value: characterId");
-        return characterRepository.findById(id).map(characterMapper::toDTO)
+        return characterRepository.findById(UUID.fromString(id)).map(characterMapper::toDTO)
                 .orElseThrow(() -> new EntityNotFoundException("Character not found for ID %s".formatted(id)));
     }
 

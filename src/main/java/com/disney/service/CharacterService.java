@@ -14,14 +14,14 @@ public interface CharacterService {
 
     void createCharacter(@NotNull CharacterRequestDto requestDto);
 
-    CharacterResponseDto updateCharacter(@NotNull UUID id, CharacterUpdateRequestDto requestDto);
+    CharacterResponseDto updateCharacter(@NotNull String id, CharacterUpdateRequestDto requestDto);
 
-    void deleteCharacter(@NotNull UUID id);
+    void deleteCharacter(@NotNull String id);
 
     Page<CharacterResponseDto> listCharacters(@NotNull int pageNumber, String characterName,
                                               int age, Set<String> moviesName);
 
-    CharacterResponseDto getCharacterDtoById(@NotNull UUID id);
+    CharacterResponseDto getCharacterById(@NotNull String id);
 
     Character getCharacterById(@NotNull UUID id);
 }

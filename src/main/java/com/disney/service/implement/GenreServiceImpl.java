@@ -41,10 +41,10 @@ public class GenreServiceImpl implements GenreService {
 
     @Override
     @Transactional(rollbackFor = {IllegalArgumentException.class, EntityNotFoundException.class})
-    public GenreResponseDto updateGenre(UUID id, GenreUpdateRequestDto requestDto) {
+    public GenreResponseDto updateGenre(String id, GenreUpdateRequestDto requestDto) {
         if (Objects.isNull(id) || Objects.isNull(requestDto))
             throw new IllegalArgumentException("Null argument passed: genre object to update");
-        Genre genreToUpdate = genreRepository.findById(id)
+        Genre genreToUpdate = genreRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new EntityNotFoundException("Genre not found for ID %s".formatted(id)));
         genreToUpdate.setName(requestDto.name());
         return genreMapper.toDTO(genreRepository.save(genreToUpdate));
@@ -52,10 +52,10 @@ public class GenreServiceImpl implements GenreService {
 
     @Override
     @Transactional(readOnly = true)
-    public GenreResponseDto getGenreDtoById(UUID id) {
+    public GenreResponseDto getGenreById(String id) {
         if (Objects.isNull(id))
             throw new IllegalArgumentException("Invalid argument ID supplied");
-        return genreRepository.findById(id).map(genreMapper::toDTO)
+        return genreRepository.findById(UUID.fromString(id)).map(genreMapper::toDTO)
                 .orElseThrow(() -> new EntityNotFoundException("Genre not found for ID %s".formatted(id)));
     }
 
