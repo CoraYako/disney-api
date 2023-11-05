@@ -118,6 +118,14 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
+    public Movie getMovieById(UUID id) {
+        if (Objects.isNull(id))
+            throw new IllegalArgumentException("The provided Movie ID is invalid");
+        return movieRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Movie not found for ID %s".formatted(id)));
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Page<MovieResponseDto> listMovies(int pageNumber, String title, String genre, String order) {
         Pageable pageable = PageRequest.of(pageNumber, 10);
