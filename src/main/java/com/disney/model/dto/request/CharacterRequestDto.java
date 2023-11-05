@@ -21,8 +21,6 @@ public record CharacterRequestDto(
         @NotEmpty(message = "The history can't be empty or null")
         @NotBlank(message = "The history can't be whitespaces")
         String history,
-        @NotNull(message = "Must provide the movie/s")
-        @NotEmpty(message = "Must provide the movie/s")
         Set<String> moviesId
 ) {
 }
