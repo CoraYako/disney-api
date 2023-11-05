@@ -23,10 +23,7 @@ public class Character implements Serializable {
     private int age;
     private double weight;
     private String history;
-    @ManyToMany(cascade = CascadeType.MERGE, fetch = FetchType.EAGER)
-    @JoinTable(name = "rel_character_movie",
-            joinColumns = @JoinColumn(name = "character_id"),
-            inverseJoinColumns = @JoinColumn(name = "movie_id"))
+    @ManyToMany(mappedBy = "characters", fetch = FetchType.EAGER)
     private Set<Movie> movies;
     private boolean deleted = false;
 
@@ -60,6 +57,31 @@ public class Character implements Serializable {
 
     public boolean isDeleted() {
         return deleted;
+    }
+
+    public void setImage(String value) {
+        if (!Objects.isNull(value) && !value.trim().isEmpty())
+            this.image = value;
+    }
+
+    public void setName(String value) {
+        if (!Objects.isNull(value) && !value.trim().isEmpty())
+            this.name = value;
+    }
+
+    public void setAge(int value) {
+        if (value > 0)
+            this.age = value;
+    }
+
+    public void setWeight(double value) {
+        if (value > 0)
+            this.weight = value;
+    }
+
+    public void setHistory(String value) {
+        if (!Objects.isNull(value) && !value.trim().isEmpty())
+            this.history = value;
     }
 
     public static CharacterBuilder builder() {

@@ -29,7 +29,10 @@ public class Movie implements Serializable {
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
     @JoinColumn(name = "genre_id")
     private Genre genre;
-    @ManyToMany(mappedBy = "movies", fetch = FetchType.EAGER)
+    @ManyToMany(cascade = CascadeType.MERGE, fetch = FetchType.EAGER)
+    @JoinTable(name = "rel_movie_character",
+            joinColumns = @JoinColumn(name = "movie_id"),
+            inverseJoinColumns = @JoinColumn(name = "character_id"))
     private Set<Character> characters;
     private boolean deleted = false;
 
@@ -63,6 +66,31 @@ public class Movie implements Serializable {
 
     public boolean isDeleted() {
         return deleted;
+    }
+
+    public void setImage(String value) {
+        if (!Objects.isNull(value) && !value.trim().isEmpty())
+            this.image = value;
+    }
+
+    public void setTitle(String value) {
+        if (!Objects.isNull(value) && !value.trim().isEmpty())
+            this.title = value;
+    }
+
+    public void setCreationDate(LocalDate value) {
+        if (!Objects.isNull(value))
+            this.creationDate = value;
+    }
+
+    public void setRate(int value) {
+        if (value > 0)
+            this.rate = value;
+    }
+
+    public void setGenre(Genre value) {
+        if (!Objects.isNull(value))
+            this.genre = value;
     }
 
     public static MovieBuilder builder() {

@@ -31,6 +31,11 @@ public class Genre implements Serializable {
         return Objects.isNull(movies) ? movies = new HashSet<>() : movies;
     }
 
+    public void setName(String value) {
+        if (!Objects.isNull(value) && !value.trim().isEmpty())
+            this.name = value;
+    }
+
     public static GenreBuilder builder() {
         return new GenreBuilder();
     }
