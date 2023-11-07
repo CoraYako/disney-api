@@ -23,13 +23,13 @@ public class MovieSpecification {
             if (StringUtils.hasLength(title)) {
                 predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("title")), '%' + title + '%'));
             }
-            if (!StringUtils.hasLength(genre)) {
+            if (StringUtils.hasLength(genre)) {
                 Join<Genre, Movie> join = root.join("genre", JoinType.LEFT);
                 Expression<String> genreId = join.get("genre_id");
                 predicates.add(genreId.in(genre));
             }
             query.distinct(true);
-            String orderByField = "creation";
+            String orderByField = "creationDate";
             query.orderBy(
                     ApiUtils.isASC(order) ?
                             criteriaBuilder.asc(root.get(orderByField))
