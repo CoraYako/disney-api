@@ -6,6 +6,7 @@ import com.disney.model.dto.response.basic.GenreBasicResponseDto;
 import com.disney.model.entity.Genre;
 import com.disney.model.mapper.GenreMapper;
 import com.disney.model.mapper.MovieMapper;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 public class GenreMapperImpl implements GenreMapper {
     private final MovieMapper movieMapper;
 
-    public GenreMapperImpl(MovieMapper movieMapper) {
+    public GenreMapperImpl(@Lazy MovieMapper movieMapper) {
         this.movieMapper = movieMapper;
     }
 

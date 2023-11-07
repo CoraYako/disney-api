@@ -11,6 +11,9 @@ import com.disney.service.CharacterService;
 import com.disney.service.MovieService;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +23,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 
+import java.security.InvalidParameterException;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -28,13 +32,14 @@ import java.util.stream.Collectors;
 @Service
 @Validated
 public class CharacterServiceImpl implements CharacterService {
+    private Logger logger = LoggerFactory.getLogger(CharacterServiceImpl.class);
     private final CharacterMapper characterMapper;
     private final CharacterRepository characterRepository;
     private final CharacterSpecification characterSpec;
     private final MovieService movieService;
 
     public CharacterServiceImpl(CharacterMapper characterMapper, CharacterRepository characterRepository,
-                                CharacterSpecification characterSpec, MovieService movieService) {
+                                CharacterSpecification characterSpec, @Lazy MovieService movieService) {
         this.characterMapper = characterMapper;
         this.characterRepository = characterRepository;
         this.characterSpec = characterSpec;
@@ -42,25 +47,27 @@ public class CharacterServiceImpl implements CharacterService {
     }
 
     @Override
-    @Transactional(rollbackFor = {IllegalArgumentException.class, EntityExistsException.class})
+    @Transactional(rollbackFor = {InvalidParameterException.class, EntityExistsException.class})
     public void createCharacter(CharacterRequestDto requestDto) {
         if (Objects.isNull(requestDto) || !StringUtils.hasLength(requestDto.name()))
-            throw new IllegalArgumentException("Invalid argument passed: Character object");
+            throw new InvalidParameterException("Invalid argument passed: Character object");
         if (characterRepository.existsByName(requestDto.name()))
             throw new EntityExistsException("The character %s already exist".formatted(requestDto.name()));
         Character character = characterMapper.toEntity(requestDto);
-        characterRepository.save(character);
+        character = characterRepository.save(character);
+        logger.info("Character entity saved with ID {}", character.getId().toString());
     }
 
     @Override
     @Transactional(rollbackFor = {
             IllegalArgumentException.class,
             EntityExistsException.class,
-            EntityNotFoundException.class
+            EntityNotFoundException.class,
+            InvalidParameterException.class
     })
     public CharacterResponseDto updateCharacter(String id, CharacterUpdateRequestDto updateRequestDto) {
         if (Objects.isNull(id) || Objects.isNull(updateRequestDto) || !StringUtils.hasLength(updateRequestDto.name()))
-            throw new IllegalArgumentException("Invalid parameter provided: Character to update");
+            throw new InvalidParameterException("Invalid parameter provided: Character to update");
         if (characterRepository.existsByName(updateRequestDto.name()))
             throw new EntityExistsException("The character %s already exists".formatted(updateRequestDto.name()));
         Character characterToUpdate = characterRepository.findById(UUID.fromString(id))
@@ -91,10 +98,14 @@ public class CharacterServiceImpl implements CharacterService {
     }
 
     @Override
-    @Transactional(rollbackFor = {IllegalArgumentException.class, EntityNotFoundException.class})
+    @Transactional(rollbackFor = {
+            IllegalArgumentException.class,
+            EntityNotFoundException.class,
+            InvalidParameterException.class
+    })
     public void deleteCharacter(String id) {
         if (Objects.isNull(id))
-            throw new IllegalArgumentException("The provided ID is invalid or null");
+            throw new InvalidParameterException("The provided ID is invalid or null");
         Character characterToDelete = characterRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new EntityNotFoundException("Character not found for ID %s".formatted(id)));
         characterRepository.delete(characterToDelete);
@@ -114,7 +125,7 @@ public class CharacterServiceImpl implements CharacterService {
     @Transactional(readOnly = true)
     public CharacterResponseDto getCharacterById(String id) {
         if (Objects.isNull(id))
-            throw new IllegalArgumentException("Invalid parameter value: characterId");
+            throw new InvalidParameterException("Invalid parameter value: characterId");
         return characterRepository.findById(UUID.fromString(id)).map(characterMapper::toDTO)
                 .orElseThrow(() -> new EntityNotFoundException("Character not found for ID %s".formatted(id)));
     }
@@ -123,7 +134,7 @@ public class CharacterServiceImpl implements CharacterService {
     @Transactional(readOnly = true)
     public Character getCharacterById(UUID id) {
         if (Objects.isNull(id))
-            throw new IllegalArgumentException("Invalid parameter value: characterId");
+            throw new InvalidParameterException("Invalid parameter value: characterId");
         return characterRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Character not found for ID %s".formatted(id)));
     }
