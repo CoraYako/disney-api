@@ -9,17 +9,24 @@ import com.disney.repository.GenreRepository;
 import com.disney.service.GenreService;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 
+import java.security.InvalidParameterException;
 import java.util.Objects;
 import java.util.UUID;
 
 @Service
 @Validated
 public class GenreServiceImpl implements GenreService {
+    private final Logger logger = LoggerFactory.getLogger(GenreServiceImpl.class);
     private final GenreRepository genreRepository;
     private final GenreMapper genreMapper;
 
@@ -29,21 +36,26 @@ public class GenreServiceImpl implements GenreService {
     }
 
     @Override
-    @Transactional(rollbackFor = {IllegalArgumentException.class, EntityExistsException.class})
+    @Transactional(rollbackFor = {InvalidParameterException.class, EntityExistsException.class})
     public void createGenre(GenreRequestDto requestDto) {
-        if (Objects.isNull(requestDto) || StringUtils.hasLength(requestDto.name()))
-            throw new IllegalArgumentException("Null argument passed: genre object");
+        if (Objects.isNull(requestDto) || !StringUtils.hasLength(requestDto.name()))
+            throw new InvalidParameterException("Null argument passed: genre object");
         if (genreRepository.existsByName(requestDto.name()))
             throw new EntityExistsException("This Genre is already registered.");
         Genre genre = genreMapper.toEntity(requestDto);
-        genreRepository.save(genre);
+        genre = genreRepository.save(genre);
+        logger.info("Genre created with name {} and ID {}", genre.getName(), genre.getId());
     }
 
     @Override
-    @Transactional(rollbackFor = {IllegalArgumentException.class, EntityNotFoundException.class})
+    @Transactional(rollbackFor = {
+            IllegalArgumentException.class,
+            EntityNotFoundException.class,
+            InvalidParameterException.class
+    })
     public GenreResponseDto updateGenre(String id, GenreUpdateRequestDto requestDto) {
         if (Objects.isNull(id) || Objects.isNull(requestDto))
-            throw new IllegalArgumentException("Null argument passed: genre object to update");
+            throw new InvalidParameterException("Invalid argument passed: genre object to update");
         Genre genreToUpdate = genreRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new EntityNotFoundException("Genre not found for ID %s".formatted(id)));
         genreToUpdate.setName(requestDto.name());
@@ -54,7 +66,7 @@ public class GenreServiceImpl implements GenreService {
     @Transactional(readOnly = true)
     public GenreResponseDto getGenreById(String id) {
         if (Objects.isNull(id))
-            throw new IllegalArgumentException("Invalid argument ID supplied");
+            throw new InvalidParameterException("Invalid argument ID supplied");
         return genreRepository.findById(UUID.fromString(id)).map(genreMapper::toDTO)
                 .orElseThrow(() -> new EntityNotFoundException("Genre not found for ID %s".formatted(id)));
     }
@@ -63,8 +75,15 @@ public class GenreServiceImpl implements GenreService {
     @Transactional(readOnly = true)
     public Genre getGenreById(UUID id) {
         if (Objects.isNull(id))
-            throw new IllegalArgumentException("Invalid argument ID supplied");
+            throw new InvalidParameterException("Invalid argument ID supplied");
         return genreRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Genre not found for ID %s".formatted(id)));
+    }
+
+    @Override
+    public Page<GenreResponseDto> listMovieGenres(int pageNumber) {
+        Pageable pageable = PageRequest.of(pageNumber, 10);
+        pageable.next().getPageNumber();
+        return genreRepository.findAll(pageable).map(genreMapper::toDTO);
     }
 }

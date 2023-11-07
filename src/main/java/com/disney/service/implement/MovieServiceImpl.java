@@ -22,6 +22,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 
+import java.security.InvalidParameterException;
 import java.time.LocalDate;
 import java.util.Objects;
 import java.util.UUID;
@@ -46,10 +47,10 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    @Transactional(rollbackFor = {IllegalArgumentException.class, EntityExistsException.class})
+    @Transactional(rollbackFor = {InvalidParameterException.class, EntityExistsException.class})
     public void createMovie(MovieRequestDto requestDto) {
         if (Objects.isNull(requestDto) || !StringUtils.hasLength(requestDto.title()))
-            throw new IllegalArgumentException("Invalid parameter value: movie");
+            throw new InvalidParameterException("Invalid parameter value: movie");
         if (movieRepository.existsByTitle(requestDto.title()))
             throw new EntityExistsException("The movie %s already exist".formatted(requestDto.title()));
         Movie movie = movieMapper.toEntity(requestDto);
@@ -65,11 +66,12 @@ public class MovieServiceImpl implements MovieService {
     @Transactional(rollbackFor = {
             IllegalArgumentException.class,
             EntityExistsException.class,
-            EntityNotFoundException.class
+            EntityNotFoundException.class,
+            InvalidParameterException.class
     })
     public MovieResponseDto updateMovie(String id, MovieUpdateRequestDto requestDto) {
         if (Objects.isNull(id) || Objects.isNull(requestDto) || !StringUtils.hasLength(requestDto.title()))
-            throw new IllegalArgumentException("Invalid argument passed: movie");
+            throw new InvalidParameterException("Invalid argument passed: movie");
         if (movieRepository.existsByTitle(requestDto.title()))
             throw new EntityExistsException("The movie %s already exist".formatted(requestDto.title()));
         Movie movieToUpdate = movieRepository.findById(UUID.fromString(id))
@@ -80,6 +82,7 @@ public class MovieServiceImpl implements MovieService {
             movieToUpdate.setCreationDate(LocalDate.parse(requestDto.creationDate(), ApiUtils.OF_PATTERN));
         if (Objects.nonNull(requestDto.genreId()) && !requestDto.genreId().trim().isEmpty())
             movieToUpdate.setGenre(genreService.getGenreById(UUID.fromString(requestDto.genreId())));
+
         // verifies if the current list is not empty and performs an operation to add new characters
         if (!CollectionUtils.isEmpty(requestDto.charactersToAdd()))
             movieToUpdate.getCharacters().addAll(
@@ -98,10 +101,10 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    @Transactional(rollbackFor = {IllegalArgumentException.class, EntityNotFoundException.class})
+    @Transactional(rollbackFor = {InvalidParameterException.class, EntityNotFoundException.class})
     public void deleteMovie(String id) {
         if (Objects.isNull(id))
-            throw new IllegalArgumentException("The provided ID is invalid or null");
+            throw new InvalidParameterException("The provided ID is invalid or null");
         Movie movieFound = movieRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new EntityNotFoundException("Movie not found for ID %s".formatted(id)));
         movieRepository.delete(movieFound);
@@ -111,7 +114,7 @@ public class MovieServiceImpl implements MovieService {
     @Transactional(readOnly = true)
     public MovieResponseDto getMovieById(String id) {
         if (Objects.isNull(id))
-            throw new IllegalArgumentException("The provided Movie ID is invalid");
+            throw new InvalidParameterException("The provided Movie ID is invalid");
         Movie movieFound = movieRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new EntityNotFoundException("Movie not found for ID %s".formatted(id)));
         return movieMapper.toDTO(movieFound);
@@ -120,7 +123,7 @@ public class MovieServiceImpl implements MovieService {
     @Override
     public Movie getMovieById(UUID id) {
         if (Objects.isNull(id))
-            throw new IllegalArgumentException("The provided Movie ID is invalid");
+            throw new InvalidParameterException("The provided Movie ID is invalid");
         return movieRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Movie not found for ID %s".formatted(id)));
     }

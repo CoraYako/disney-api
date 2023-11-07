@@ -6,6 +6,7 @@ import com.disney.model.dto.response.basic.CharacterBasicResponseDto;
 import com.disney.model.entity.Character;
 import com.disney.model.mapper.CharacterMapper;
 import com.disney.model.mapper.MovieMapper;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 public class CharacterMapperImpl implements CharacterMapper {
     private final MovieMapper movieMapper;
 
-    public CharacterMapperImpl(MovieMapper movieMapper) {
+    public CharacterMapperImpl(@Lazy MovieMapper movieMapper) {
         this.movieMapper = movieMapper;
     }
 
