@@ -26,7 +26,7 @@ public class CharacterSpecification {
                         .like(criteriaBuilder.lower(root.get("name")), '%' + characterName + '%')
                 );
 
-            if (age >= 0)
+            if (age > 0)
                 predicates.add(criteriaBuilder.equal(root.get("age"), age));
 
             if (!CollectionUtils.isEmpty(moviesName)) {
