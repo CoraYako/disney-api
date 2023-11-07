@@ -32,7 +32,7 @@ public class Genre implements Serializable {
     }
 
     public void setName(String value) {
-        if (!Objects.isNull(value) && !value.trim().isEmpty())
+        if (!Objects.isNull(value) && !value.trim().isEmpty() && !this.name.equalsIgnoreCase(value))
             this.name = value;
     }
 
