@@ -5,6 +5,7 @@ import com.disney.model.dto.request.GenreUpdateRequestDto;
 import com.disney.model.dto.response.GenreResponseDto;
 import com.disney.service.GenreService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,5 +34,11 @@ public class GenreController {
     @GetMapping("/{genreId}")
     public ResponseEntity<GenreResponseDto> getGenre(@PathVariable String genreId) {
         return ResponseEntity.status(HttpStatus.OK).body(genreService.getGenreById(genreId));
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<GenreResponseDto>> listGenres(
+            @RequestParam(required = false, defaultValue = "0", name = "page") int pageNumber) {
+        return ResponseEntity.status(HttpStatus.OK).body(genreService.listMovieGenres(pageNumber));
     }
 }
