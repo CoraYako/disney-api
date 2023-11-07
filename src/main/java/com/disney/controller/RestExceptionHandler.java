@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import java.security.InvalidParameterException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -97,18 +98,19 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                 .timestamp(LocalDateTime.now())
                 .message(ex.getMessage())
                 .path(request.getDescription(false))
-                .errorCode(HttpCodeResponse.INVALID_ARGUMENT)
+                .errorCode(HttpCodeResponse.INVALID_ID_VALUE)
                 .build();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiErrorResponse);
     }
 
-    /*@ExceptionHandler(value = {DateTimeException.class, DateTimeParseException.class})
-    protected ResponseEntity<Object> handleDateTimeParse(DateTimeException ex, WebRequest request) {
-        ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
-                BAD_REQUEST,
-                ex.getMessage(),
-                Collections.singletonList("Malformed date request")
-        );
-        return handleExceptionInternal(ex, apiErrorResponse, new HttpHeaders(), apiErrorResponse.getStatus(), request);
-    }*/
+    @ExceptionHandler(value = {InvalidParameterException.class})
+    protected ResponseEntity<Object> handleInvalidParameter(InvalidParameterException ex, WebRequest request) {
+        ApiErrorResponse apiErrorResponse = ApiErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .message(ex.getMessage())
+                .path(request.getDescription(false))
+                .errorCode(HttpCodeResponse.INVALID_ARGUMENT)
+                .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiErrorResponse);
+    }
 }
