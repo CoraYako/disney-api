@@ -20,7 +20,9 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.security.InvalidParameterException;
+import java.time.DateTimeException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -110,6 +112,17 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                 .message(ex.getMessage())
                 .path(request.getDescription(false))
                 .errorCode(HttpCodeResponse.INVALID_ARGUMENT)
+                .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiErrorResponse);
+    }
+
+    @ExceptionHandler(value = {DateTimeParseException.class})
+    protected ResponseEntity<Object> handleDateTimeParse(DateTimeParseException ex, WebRequest request) {
+        ApiErrorResponse apiErrorResponse = ApiErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .message(ex.getMessage())
+                .path(request.getDescription(false))
+                .errorCode(HttpCodeResponse.INVALID_DATE_FORMAT)
                 .build();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiErrorResponse);
     }
