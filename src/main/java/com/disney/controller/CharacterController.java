@@ -42,7 +42,8 @@ public class CharacterController {
     public ResponseEntity<Page<CharacterResponseDto>> listMovieCharacters(
             @RequestParam(required = false, defaultValue = "0", name = "page") int pageNumber,
             @RequestParam(required = false) String name,
-            @RequestParam(required = false) Integer age, @RequestParam(required = false) Set<String> moviesId) {
+            @RequestParam(required = false, defaultValue = "0") int age,
+            @RequestParam(required = false) Set<String> moviesId) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(characterService.listCharacters(pageNumber, name, age, moviesId));
     }
