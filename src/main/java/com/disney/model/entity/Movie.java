@@ -1,5 +1,6 @@
 package com.disney.model.entity;
 
+import com.disney.util.ApiUtils;
 import jakarta.persistence.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
@@ -74,13 +75,13 @@ public class Movie implements Serializable {
     }
 
     public void setTitle(String value) {
-        if (!Objects.isNull(value) && !value.trim().isEmpty())
+        if (!Objects.isNull(value) && !value.trim().isEmpty() && !this.title.equalsIgnoreCase(value))
             this.title = value;
     }
 
-    public void setCreationDate(LocalDate value) {
-        if (!Objects.isNull(value))
-            this.creationDate = value;
+    public void setCreationDate(String value) {
+        if (Objects.nonNull(value) && !value.trim().isEmpty())
+            this.creationDate = LocalDate.parse(value, ApiUtils.OF_PATTERN);
     }
 
     public void setRate(int value) {
