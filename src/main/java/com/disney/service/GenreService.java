@@ -5,6 +5,7 @@ import com.disney.model.dto.request.GenreUpdateRequestDto;
 import com.disney.model.dto.response.GenreResponseDto;
 import com.disney.model.entity.Genre;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.data.domain.Page;
 
 import java.util.UUID;
 
@@ -17,4 +18,6 @@ public interface GenreService {
     GenreResponseDto getGenreById(@NotNull String id);
 
     Genre getGenreById(@NotNull UUID id);
+
+    Page<GenreResponseDto> listMovieGenres(int pageNumber);
 }
