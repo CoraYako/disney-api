@@ -38,7 +38,8 @@ public class MovieController {
 
     @GetMapping
     public ResponseEntity<Page<MovieResponseDto>> listMovies(
-            @RequestParam(required = false, name = "page") int pageNumber, @RequestParam(required = false) String title,
+            @RequestParam(required = false, defaultValue = "0", name = "page") int pageNumber,
+            @RequestParam(required = false) String title,
             @RequestParam(required = false) String genre,
             @RequestParam(required = false, defaultValue = "ASC") String order) {
         return ResponseEntity.status(HttpStatus.OK).body(movieService.listMovies(pageNumber, title, genre, order));
