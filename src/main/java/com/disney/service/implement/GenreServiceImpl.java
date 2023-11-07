@@ -54,7 +54,7 @@ public class GenreServiceImpl implements GenreService {
             InvalidParameterException.class
     })
     public GenreResponseDto updateGenre(String id, GenreUpdateRequestDto requestDto) {
-        if (Objects.isNull(id) || Objects.isNull(requestDto))
+        if (Objects.isNull(id))
             throw new InvalidParameterException("Invalid argument passed: genre object to update");
         Genre genreToUpdate = genreRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new EntityNotFoundException("Genre not found for ID %s".formatted(id)));
