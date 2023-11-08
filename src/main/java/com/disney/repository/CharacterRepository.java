@@ -1,20 +1,12 @@
 package com.disney.repository;
 
-import com.disney.model.entity.CharacterEntity;
-import org.springframework.data.jpa.domain.Specification;
+import com.disney.model.entity.Character;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.UUID;
 
-@Repository
-public interface CharacterRepository extends JpaRepository<CharacterEntity, Long> {
+public interface CharacterRepository extends JpaRepository<Character, UUID>, JpaSpecificationExecutor<Character> {
 
-    @Query(value = "SELECT * FROM characters WHERE name LIKE :name", nativeQuery = true)
-    Optional<CharacterEntity> findByName(@Param("name") String name);
-
-    List<CharacterEntity> findAll(Specification<CharacterEntity> specification);
+    boolean existsByName(String name);
 }
