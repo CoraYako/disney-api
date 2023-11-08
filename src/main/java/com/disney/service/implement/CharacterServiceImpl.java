@@ -49,15 +49,27 @@ public class CharacterServiceImpl implements CharacterService {
     }
 
     @Override
-    @Transactional(rollbackFor = {InvalidParameterException.class, EntityExistsException.class})
+    @Transactional(rollbackFor = {
+            InvalidParameterException.class,
+            EntityExistsException.class,
+            InvalidUUIDFormatException.class
+    })
     public void createCharacter(CharacterRequestDto requestDto) {
         if (Objects.isNull(requestDto) || !StringUtils.hasLength(requestDto.name()))
             throw new InvalidParameterException("Invalid argument passed: Character object");
         if (characterRepository.existsByName(requestDto.name()))
             throw new EntityExistsException("The character '%s' is already registered".formatted(requestDto.name()));
+        // saves the current character before append the movies (if present) to the character
         Character character = characterMapper.toEntity(requestDto);
-        character = characterRepository.save(character);
-        logger.info("Character entity saved with name {} and ID {}", character.getName(), character.getId().toString());
+
+        // takes the list of movies and adds the movies to the current character and vise versa
+        if (!CollectionUtils.isEmpty(requestDto.moviesId()))
+            character.getMovies().addAll(requestDto.moviesId().stream()
+                    .map(movieId -> movieService.appendCharacterToMovie(ApiUtils.getUUIDFromString(movieId), character))
+                    .collect(Collectors.toUnmodifiableSet()));
+
+        var characterSaved = characterRepository.save(character);
+        logger.info("Character entity saved with name {} and ID {}", characterSaved.getName(), characterSaved.getId().toString());
     }
 
     @Override
