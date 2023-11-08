@@ -60,27 +60,27 @@ public class Character implements Serializable {
     }
 
     public void setImage(String value) {
-        if (!Objects.isNull(value) && !value.trim().isEmpty())
+        if (!Objects.isNull(value) && !value.trim().isEmpty() && !this.image.equalsIgnoreCase(value))
             this.image = value;
     }
 
     public void setName(String value) {
-        if (!Objects.isNull(value) && !value.trim().isEmpty())
+        if (!Objects.isNull(value) && !value.trim().isEmpty() && !this.name.equalsIgnoreCase(value))
             this.name = value;
     }
 
     public void setAge(int value) {
-        if (value > 0)
+        if (value > 0 && this.age != value)
             this.age = value;
     }
 
     public void setWeight(double value) {
-        if (value > 0)
+        if (value > 0 && this.weight != value)
             this.weight = value;
     }
 
     public void setHistory(String value) {
-        if (!Objects.isNull(value) && !value.trim().isEmpty())
+        if (!Objects.isNull(value) && !value.trim().isEmpty() && !this.history.equalsIgnoreCase(value))
             this.history = value;
     }
 
