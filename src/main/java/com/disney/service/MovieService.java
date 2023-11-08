@@ -3,6 +3,7 @@ package com.disney.service;
 import com.disney.model.dto.request.MovieRequestDto;
 import com.disney.model.dto.request.MovieUpdateRequestDto;
 import com.disney.model.dto.response.MovieResponseDto;
+import com.disney.model.entity.Character;
 import com.disney.model.entity.Movie;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
@@ -19,7 +20,9 @@ public interface MovieService {
 
     MovieResponseDto getMovieById(@NotNull String id);
 
-    Movie getMovieById(@NotNull UUID id);
+    Movie appendCharacterToMovie(@NotNull UUID id, @NotNull Character character);
+
+    Movie removeCharacterFromMovie(@NotNull UUID id, @NotNull Character character);
 
     Page<MovieResponseDto> listMovies(@NotNull int pageNumber, String title, String genre, String order);
 }
