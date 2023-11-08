@@ -3,6 +3,7 @@ package com.disney.util;
 import com.disney.model.InvalidUUIDFormatException;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 import java.util.UUID;
 
 public class ApiUtils {
@@ -14,7 +15,7 @@ public class ApiUtils {
 
     public static UUID getUUIDFromString(String value) {
         try {
-            return UUID.fromString(value);
+            return UUID.fromString(Objects.requireNonNull(value));
         } catch (Exception e) {
             throw new InvalidUUIDFormatException(e.getMessage());
         }
