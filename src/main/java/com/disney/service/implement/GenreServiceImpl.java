@@ -1,5 +1,6 @@
 package com.disney.service.implement;
 
+import com.disney.model.InvalidUUIDFormatException;
 import com.disney.model.dto.request.GenreRequestDto;
 import com.disney.model.dto.request.GenreUpdateRequestDto;
 import com.disney.model.dto.response.GenreResponseDto;
@@ -7,6 +8,7 @@ import com.disney.model.entity.Genre;
 import com.disney.model.mapper.GenreMapper;
 import com.disney.repository.GenreRepository;
 import com.disney.service.GenreService;
+import com.disney.util.ApiUtils;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
@@ -41,7 +43,7 @@ public class GenreServiceImpl implements GenreService {
         if (Objects.isNull(requestDto) || !StringUtils.hasLength(requestDto.name()))
             throw new InvalidParameterException("Null argument passed: genre object");
         if (genreRepository.existsByName(requestDto.name()))
-            throw new EntityExistsException("This Genre is already registered.");
+            throw new EntityExistsException("The Genre '%s' is already registered.".formatted(requestDto.name()));
         Genre genre = genreMapper.toEntity(requestDto);
         genre = genreRepository.save(genre);
         logger.info("Genre created with name {} and ID {}", genre.getName(), genre.getId());
@@ -51,12 +53,13 @@ public class GenreServiceImpl implements GenreService {
     @Transactional(rollbackFor = {
             IllegalArgumentException.class,
             EntityNotFoundException.class,
-            InvalidParameterException.class
+            InvalidParameterException.class,
+            InvalidUUIDFormatException.class
     })
     public GenreResponseDto updateGenre(String id, GenreUpdateRequestDto requestDto) {
         if (Objects.isNull(id))
             throw new InvalidParameterException("Invalid argument passed: genre object to update");
-        Genre genreToUpdate = genreRepository.findById(UUID.fromString(id))
+        Genre genreToUpdate = genreRepository.findById(ApiUtils.getUUIDFromString(id))
                 .orElseThrow(() -> new EntityNotFoundException("Genre not found for ID %s".formatted(id)));
         genreToUpdate.setName(requestDto.name());
         return genreMapper.toDTO(genreRepository.save(genreToUpdate));
@@ -67,7 +70,7 @@ public class GenreServiceImpl implements GenreService {
     public GenreResponseDto getGenreById(String id) {
         if (Objects.isNull(id))
             throw new InvalidParameterException("Invalid argument ID supplied");
-        return genreRepository.findById(UUID.fromString(id)).map(genreMapper::toDTO)
+        return genreRepository.findById(ApiUtils.getUUIDFromString(id)).map(genreMapper::toDTO)
                 .orElseThrow(() -> new EntityNotFoundException("Genre not found for ID %s".formatted(id)));
     }
 

@@ -1,5 +1,6 @@
 package com.disney.service.implement;
 
+import com.disney.model.InvalidUUIDFormatException;
 import com.disney.model.dto.request.MovieRequestDto;
 import com.disney.model.dto.request.MovieUpdateRequestDto;
 import com.disney.model.dto.response.MovieResponseDto;
@@ -47,14 +48,18 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    @Transactional(rollbackFor = {InvalidParameterException.class, EntityExistsException.class})
+    @Transactional(rollbackFor = {
+            InvalidParameterException.class,
+            EntityExistsException.class,
+            InvalidUUIDFormatException.class
+    })
     public void createMovie(MovieRequestDto requestDto) {
         if (Objects.isNull(requestDto) || !StringUtils.hasLength(requestDto.title()))
             throw new InvalidParameterException("Invalid parameter value: movie");
         if (movieRepository.existsByTitle(requestDto.title()))
             throw new EntityExistsException("The movie '%s' already exist".formatted(requestDto.title()));
         Movie movie = movieMapper.toEntity(requestDto);
-        movie.setGenre(genreService.getGenreById(UUID.fromString(requestDto.genreId())));
+        movie.setGenre(genreService.getGenreById(ApiUtils.getUUIDFromString(requestDto.genreId())));
         movie.getCharacters().addAll(
                 requestDto.charactersId().stream()
                         .map(characterId -> characterService.getCharacterById(ApiUtils.getUUIDFromString(characterId)))
@@ -67,12 +72,13 @@ public class MovieServiceImpl implements MovieService {
     @Transactional(rollbackFor = {
             IllegalArgumentException.class,
             EntityNotFoundException.class,
-            InvalidParameterException.class
+            InvalidParameterException.class,
+            InvalidUUIDFormatException.class
     })
     public MovieResponseDto updateMovie(String id, MovieUpdateRequestDto requestDto) {
         if (Objects.isNull(id))
             throw new InvalidParameterException("Invalid argument passed: movie");
-        Movie movieToUpdate = movieRepository.findById(UUID.fromString(id))
+        Movie movieToUpdate = movieRepository.findById(ApiUtils.getUUIDFromString(id))
                 .orElseThrow(() -> new EntityNotFoundException("Movie not found for ID %s".formatted(id)));
 
         // updates the values of the current movie
