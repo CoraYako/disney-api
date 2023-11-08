@@ -3,6 +3,7 @@ package com.disney.service.implement;
 import com.disney.model.dto.request.MovieRequestDto;
 import com.disney.model.dto.request.MovieUpdateRequestDto;
 import com.disney.model.dto.response.MovieResponseDto;
+import com.disney.model.entity.Character;
 import com.disney.model.entity.Movie;
 import com.disney.model.mapper.MovieMapper;
 import com.disney.repository.MovieRepository;
@@ -23,7 +24,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 
 import java.security.InvalidParameterException;
-import java.time.LocalDate;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -52,11 +52,12 @@ public class MovieServiceImpl implements MovieService {
         if (Objects.isNull(requestDto) || !StringUtils.hasLength(requestDto.title()))
             throw new InvalidParameterException("Invalid parameter value: movie");
         if (movieRepository.existsByTitle(requestDto.title()))
-            throw new EntityExistsException("The movie %s already exist".formatted(requestDto.title()));
+            throw new EntityExistsException("The movie '%s' already exist".formatted(requestDto.title()));
         Movie movie = movieMapper.toEntity(requestDto);
+        movie.setGenre(genreService.getGenreById(UUID.fromString(requestDto.genreId())));
         movie.getCharacters().addAll(
                 requestDto.charactersId().stream()
-                        .map(characterId -> characterService.getCharacterById(UUID.fromString(characterId)))
+                        .map(characterId -> characterService.getCharacterById(ApiUtils.getUUIDFromString(characterId)))
                         .collect(Collectors.toUnmodifiableSet())
         );
         movieRepository.save(movie);
@@ -65,38 +66,36 @@ public class MovieServiceImpl implements MovieService {
     @Override
     @Transactional(rollbackFor = {
             IllegalArgumentException.class,
-            EntityExistsException.class,
             EntityNotFoundException.class,
             InvalidParameterException.class
     })
     public MovieResponseDto updateMovie(String id, MovieUpdateRequestDto requestDto) {
-        if (Objects.isNull(id) || Objects.isNull(requestDto) || !StringUtils.hasLength(requestDto.title()))
+        if (Objects.isNull(id))
             throw new InvalidParameterException("Invalid argument passed: movie");
-        if (movieRepository.existsByTitle(requestDto.title()))
-            throw new EntityExistsException("The movie %s already exist".formatted(requestDto.title()));
         Movie movieToUpdate = movieRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new EntityNotFoundException("Movie not found for ID %s".formatted(id)));
+
+        // updates the values of the current movie
         movieToUpdate.setImage(requestDto.image());
         movieToUpdate.setTitle(requestDto.title());
-        if (Objects.nonNull(requestDto.creationDate()) && !requestDto.creationDate().trim().isEmpty())
-            movieToUpdate.setCreationDate(LocalDate.parse(requestDto.creationDate(), ApiUtils.OF_PATTERN));
-        if (Objects.nonNull(requestDto.genreId()) && !requestDto.genreId().trim().isEmpty())
-            movieToUpdate.setGenre(genreService.getGenreById(UUID.fromString(requestDto.genreId())));
+        movieToUpdate.setRate(requestDto.rate());
+        movieToUpdate.setCreationDate(requestDto.creationDate());
 
-        // verifies if the current list is not empty and performs an operation to add new characters
+        // if it's present, sets the new movie genre
+        if (Objects.nonNull(requestDto.genreId()) && !requestDto.genreId().trim().isEmpty())
+            movieToUpdate.setGenre(genreService.getGenreById(ApiUtils.getUUIDFromString(requestDto.genreId())));
+
+        // verifies if the current list is not empty and performs an operation to add the new characters
         if (!CollectionUtils.isEmpty(requestDto.charactersToAdd()))
-            movieToUpdate.getCharacters().addAll(
-                    requestDto.charactersToAdd().stream()
-                            .map(characterId -> characterService.getCharacterById(UUID.fromString(characterId)))
-                            .collect(Collectors.toUnmodifiableSet())
-            );
+            movieToUpdate.getCharacters().addAll(requestDto.charactersToAdd().stream()
+                    .map(characterId -> characterService.getCharacterById(ApiUtils.getUUIDFromString(characterId)))
+                    .collect(Collectors.toUnmodifiableSet()));
+
         // verifies if the current list is not empty and performs an operation to remove the characters
         if (!CollectionUtils.isEmpty(requestDto.charactersToRemove()))
-            movieToUpdate.getCharacters().removeAll(
-                    requestDto.charactersToRemove().stream()
-                            .map(characterId -> characterService.getCharacterById(UUID.fromString(characterId)))
-                            .collect(Collectors.toUnmodifiableSet())
-            );
+            movieToUpdate.getCharacters().removeAll(requestDto.charactersToRemove().stream()
+                    .map(characterId -> characterService.getCharacterById(ApiUtils.getUUIDFromString(characterId)))
+                    .collect(Collectors.toUnmodifiableSet()));
         return movieMapper.toDTO(movieRepository.save(movieToUpdate));
     }
 
@@ -105,7 +104,7 @@ public class MovieServiceImpl implements MovieService {
     public void deleteMovie(String id) {
         if (Objects.isNull(id))
             throw new InvalidParameterException("The provided ID is invalid or null");
-        Movie movieFound = movieRepository.findById(UUID.fromString(id))
+        Movie movieFound = movieRepository.findById(ApiUtils.getUUIDFromString(id))
                 .orElseThrow(() -> new EntityNotFoundException("Movie not found for ID %s".formatted(id)));
         movieRepository.delete(movieFound);
     }
@@ -115,17 +114,31 @@ public class MovieServiceImpl implements MovieService {
     public MovieResponseDto getMovieById(String id) {
         if (Objects.isNull(id))
             throw new InvalidParameterException("The provided Movie ID is invalid");
-        Movie movieFound = movieRepository.findById(UUID.fromString(id))
+        Movie movieFound = movieRepository.findById(ApiUtils.getUUIDFromString(id))
                 .orElseThrow(() -> new EntityNotFoundException("Movie not found for ID %s".formatted(id)));
         return movieMapper.toDTO(movieFound);
     }
 
     @Override
-    public Movie getMovieById(UUID id) {
+    @Transactional(rollbackFor = {InvalidParameterException.class, EntityNotFoundException.class})
+    public Movie appendCharacterToMovie(UUID id, Character character) {
         if (Objects.isNull(id))
             throw new InvalidParameterException("The provided Movie ID is invalid");
-        return movieRepository.findById(id)
+        Movie movieToUpdate = movieRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Movie not found for ID %s".formatted(id)));
+        movieToUpdate.addCharacterToList(character);
+        return movieRepository.save(movieToUpdate);
+    }
+
+    @Override
+    @Transactional(rollbackFor = {InvalidParameterException.class, EntityNotFoundException.class})
+    public Movie removeCharacterFromMovie(UUID id, Character character) {
+        if (Objects.isNull(id))
+            throw new InvalidParameterException("The provided Movie ID is invalid");
+        Movie movieToUpdate = movieRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Movie not found for ID %s".formatted(id)));
+        movieToUpdate.removeCharacterFromList(character);
+        return movieRepository.save(movieToUpdate);
     }
 
     @Override
