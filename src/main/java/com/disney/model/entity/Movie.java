@@ -62,11 +62,17 @@ public class Movie implements Serializable {
     }
 
     public Set<Character> getCharacters() {
-        return Objects.isNull(characters) ? characters = new HashSet<>() : characters;
+        return Objects.isNull(characters) ? this.characters = new HashSet<>() : this.characters;
     }
 
-    public boolean isDeleted() {
-        return deleted;
+    public void addCharacterToList(Character character) {
+        if (Objects.nonNull(character) && !this.characters.contains(character))
+            this.getCharacters().add(character);
+    }
+
+    public void removeCharacterFromList(Character character) {
+        if (Objects.nonNull(character) && this.characters.contains(character))
+            this.getCharacters().remove(character);
     }
 
     public void setImage(String value) {
