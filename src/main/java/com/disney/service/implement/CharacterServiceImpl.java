@@ -127,7 +127,7 @@ public class CharacterServiceImpl implements CharacterService {
     @Transactional(readOnly = true)
     public Page<CharacterResponseDto> listCharacters(int pageNumber, String characterName,
                                                      int age, Set<String> moviesName) {
-        Pageable pageable = PageRequest.of(pageNumber, 10);
+        Pageable pageable = PageRequest.of(pageNumber, ApiUtils.ELEMENTS_PER_PAGE);
         pageable.next().getPageNumber();
         return characterRepository.findAll(characterSpec.getByFilters(characterName, age, moviesName), pageable)
                 .map(characterMapper::toDTO);

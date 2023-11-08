@@ -85,7 +85,7 @@ public class GenreServiceImpl implements GenreService {
 
     @Override
     public Page<GenreResponseDto> listMovieGenres(int pageNumber) {
-        Pageable pageable = PageRequest.of(pageNumber, 10);
+        Pageable pageable = PageRequest.of(pageNumber, ApiUtils.ELEMENTS_PER_PAGE);
         pageable.next().getPageNumber();
         return genreRepository.findAll(pageable).map(genreMapper::toDTO);
     }

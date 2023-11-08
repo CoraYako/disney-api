@@ -13,6 +13,8 @@ public class ApiUtils {
         return order.compareToIgnoreCase("ASC") == 0;
     }
 
+    public static final int ELEMENTS_PER_PAGE = 10;
+
     public static UUID getUUIDFromString(String value) {
         try {
             return UUID.fromString(Objects.requireNonNull(value));

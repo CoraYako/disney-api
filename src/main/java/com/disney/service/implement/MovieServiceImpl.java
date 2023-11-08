@@ -150,7 +150,7 @@ public class MovieServiceImpl implements MovieService {
     @Override
     @Transactional(readOnly = true)
     public Page<MovieResponseDto> listMovies(int pageNumber, String title, String genre, String order) {
-        Pageable pageable = PageRequest.of(pageNumber, 10);
+        Pageable pageable = PageRequest.of(pageNumber, ApiUtils.ELEMENTS_PER_PAGE);
         pageable.next().getPageNumber();
         return movieRepository.findAll(movieSpec.getByFilters(title, genre, order), pageable)
                 .map(movieMapper::toDTO);
