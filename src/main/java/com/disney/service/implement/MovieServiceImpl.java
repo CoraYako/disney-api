@@ -15,6 +15,8 @@ import com.disney.service.MovieService;
 import com.disney.util.ApiUtils;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +34,7 @@ import java.util.stream.Collectors;
 @Service
 @Validated
 public class MovieServiceImpl implements MovieService {
+    private final Logger logger = LoggerFactory.getLogger(MovieServiceImpl.class);
     private final MovieRepository movieRepository;
     private final MovieMapper movieMapper;
     private final MovieSpecification movieSpec;
@@ -65,7 +68,8 @@ public class MovieServiceImpl implements MovieService {
                         .map(characterId -> characterService.getCharacterById(ApiUtils.getUUIDFromString(characterId)))
                         .collect(Collectors.toUnmodifiableSet())
         );
-        movieRepository.save(movie);
+        movie = movieRepository.save(movie);
+        logger.info("Request for creating a movie successfully made. Movie title: '{}'", movie.getTitle());
     }
 
     @Override
@@ -113,6 +117,7 @@ public class MovieServiceImpl implements MovieService {
         Movie movieFound = movieRepository.findById(ApiUtils.getUUIDFromString(id))
                 .orElseThrow(() -> new EntityNotFoundException("Movie not found for ID %s".formatted(id)));
         movieRepository.delete(movieFound);
+        logger.info("Movie with ID {} deleted successfully", id);
     }
 
     @Override
