@@ -1,6 +1,7 @@
 package com.disney.controller;
 
 import com.disney.model.HttpCodeResponse;
+import com.disney.model.InvalidUUIDFormatException;
 import com.disney.model.dto.response.ApiErrorResponse;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -20,7 +21,6 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.security.InvalidParameterException;
-import java.time.DateTimeException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.HashMap;
@@ -94,13 +94,13 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiErrorResponse);
     }
 
-    @ExceptionHandler(value = IllegalArgumentException.class)
-    protected ResponseEntity<Object> handleIllegalArgument(IllegalArgumentException ex, WebRequest request) {
+    @ExceptionHandler(value = InvalidUUIDFormatException.class)
+    protected ResponseEntity<Object> handleInvalidUUIDFormat(InvalidUUIDFormatException ex, WebRequest request) {
         ApiErrorResponse apiErrorResponse = ApiErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .message(ex.getMessage())
                 .path(request.getDescription(false))
-                .errorCode(HttpCodeResponse.INVALID_ID_VALUE)
+                .errorCode(HttpCodeResponse.INVALID_ID_FORMAT)
                 .build();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiErrorResponse);
     }
