@@ -1,5 +1,6 @@
 package com.disney.service.implement;
 
+import com.disney.model.InvalidUUIDFormatException;
 import com.disney.model.dto.request.CharacterRequestDto;
 import com.disney.model.dto.request.CharacterUpdateRequestDto;
 import com.disney.model.dto.response.CharacterResponseDto;
@@ -9,6 +10,7 @@ import com.disney.repository.CharacterRepository;
 import com.disney.repository.specification.CharacterSpecification;
 import com.disney.service.CharacterService;
 import com.disney.service.MovieService;
+import com.disney.util.ApiUtils;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
@@ -32,7 +34,7 @@ import java.util.stream.Collectors;
 @Service
 @Validated
 public class CharacterServiceImpl implements CharacterService {
-    private Logger logger = LoggerFactory.getLogger(CharacterServiceImpl.class);
+    private final Logger logger = LoggerFactory.getLogger(CharacterServiceImpl.class);
     private final CharacterMapper characterMapper;
     private final CharacterRepository characterRepository;
     private final CharacterSpecification characterSpec;
@@ -52,63 +54,61 @@ public class CharacterServiceImpl implements CharacterService {
         if (Objects.isNull(requestDto) || !StringUtils.hasLength(requestDto.name()))
             throw new InvalidParameterException("Invalid argument passed: Character object");
         if (characterRepository.existsByName(requestDto.name()))
-            throw new EntityExistsException("The character %s already exist".formatted(requestDto.name()));
+            throw new EntityExistsException("The character '%s' is already registered".formatted(requestDto.name()));
         Character character = characterMapper.toEntity(requestDto);
         character = characterRepository.save(character);
-        logger.info("Character entity saved with ID {}", character.getId().toString());
+        logger.info("Character entity saved with name {} and ID {}", character.getName(), character.getId().toString());
     }
 
     @Override
     @Transactional(rollbackFor = {
-            IllegalArgumentException.class,
+            InvalidUUIDFormatException.class,
             EntityExistsException.class,
             EntityNotFoundException.class,
             InvalidParameterException.class
     })
     public CharacterResponseDto updateCharacter(String id, CharacterUpdateRequestDto updateRequestDto) {
-        if (Objects.isNull(id) || Objects.isNull(updateRequestDto) || !StringUtils.hasLength(updateRequestDto.name()))
+        if (Objects.isNull(id))
             throw new InvalidParameterException("Invalid parameter provided: Character to update");
-        if (characterRepository.existsByName(updateRequestDto.name()))
-            throw new EntityExistsException("The character %s already exists".formatted(updateRequestDto.name()));
-        Character characterToUpdate = characterRepository.findById(UUID.fromString(id))
+        Character characterToUpdate = characterRepository.findById(ApiUtils.getUUIDFromString(id))
                 .orElseThrow(() -> new EntityNotFoundException("Character not found for ID %s".formatted(id)));
-        // update values of the current founded character
-        characterToUpdate.setImage(updateRequestDto.image());
+
+        // update values of the current character found
         characterToUpdate.setName(updateRequestDto.name());
+        characterToUpdate.setImage(updateRequestDto.image());
         characterToUpdate.setAge(updateRequestDto.age());
         characterToUpdate.setWeight(updateRequestDto.weight());
         characterToUpdate.setHistory(updateRequestDto.history());
 
         // takes the movies where the character appears
         if (!CollectionUtils.isEmpty(updateRequestDto.moviesWhereAppears()))
-            characterToUpdate.getMovies().addAll(
-                    updateRequestDto.moviesWhereAppears().stream()
-                            .map(movieId -> movieService.getMovieById(UUID.fromString(movieId)))
-                            .collect(Collectors.toUnmodifiableSet())
-            );
+            characterToUpdate.getMovies().addAll(updateRequestDto.moviesWhereAppears().stream()
+                    .map(movieId -> movieService.appendCharacterToMovie(
+                            ApiUtils.getUUIDFromString(movieId), characterToUpdate))
+                    .collect(Collectors.toUnmodifiableSet()));
 
         // remove the movies where the current character doesn't appear
         if (!CollectionUtils.isEmpty(updateRequestDto.moviesToUnlink()))
-            characterToUpdate.getMovies().removeAll(
-                    updateRequestDto.moviesToUnlink().stream()
-                            .map(movieId -> movieService.getMovieById(UUID.fromString(movieId)))
-                            .collect(Collectors.toUnmodifiableSet())
-            );
+            characterToUpdate.getMovies().removeAll(updateRequestDto.moviesToUnlink().stream()
+                    .map(movieId -> movieService.removeCharacterFromMovie(
+                            ApiUtils.getUUIDFromString(movieId), characterToUpdate))
+                    .collect(Collectors.toUnmodifiableSet()));
         return characterMapper.toDTO(characterRepository.save(characterToUpdate));
     }
 
     @Override
     @Transactional(rollbackFor = {
-            IllegalArgumentException.class,
+            InvalidUUIDFormatException.class,
             EntityNotFoundException.class,
             InvalidParameterException.class
     })
     public void deleteCharacter(String id) {
         if (Objects.isNull(id))
             throw new InvalidParameterException("The provided ID is invalid or null");
-        Character characterToDelete = characterRepository.findById(UUID.fromString(id))
+        Character characterToDelete = characterRepository.findById(ApiUtils.getUUIDFromString(id))
                 .orElseThrow(() -> new EntityNotFoundException("Character not found for ID %s".formatted(id)));
         characterRepository.delete(characterToDelete);
+        logger.info("The character with ID {} was deleted", id);
     }
 
     @Override
@@ -126,7 +126,7 @@ public class CharacterServiceImpl implements CharacterService {
     public CharacterResponseDto getCharacterById(String id) {
         if (Objects.isNull(id))
             throw new InvalidParameterException("Invalid parameter value: characterId");
-        return characterRepository.findById(UUID.fromString(id)).map(characterMapper::toDTO)
+        return characterRepository.findById(ApiUtils.getUUIDFromString(id)).map(characterMapper::toDTO)
                 .orElseThrow(() -> new EntityNotFoundException("Character not found for ID %s".formatted(id)));
     }
 
