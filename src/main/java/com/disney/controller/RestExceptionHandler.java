@@ -35,11 +35,8 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                                                                   @NonNull HttpStatusCode status,
                                                                   @NonNull WebRequest request) {
         Map<String, String> errors = new HashMap<>();
-        List<ObjectError> errorList = ex.getBindingResult().getAllErrors();
-        errorList.forEach(error -> {
-            String fieldName = ((FieldError) error).getField();
-            String message = error.getDefaultMessage();
-            errors.put(fieldName, message);
+        ex.getBindingResult().getAllErrors().forEach(error -> {
+            errors.put(((FieldError) error).getField(), error.getDefaultMessage());
         });
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
     }
@@ -65,7 +62,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
         ApiErrorResponse apiErrorResponse = ApiErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
-                .message(ex.getMessage())
+                .message("Required request body is missing")
                 .path(request.getDescription(false))
                 .errorCode(HttpCodeResponse.INVALID_REQUIRED_PAYLOAD)
                 .build();
