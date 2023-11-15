@@ -4,6 +4,7 @@ import com.disney.model.dto.request.GenreRequestDto;
 import com.disney.model.dto.request.GenreUpdateRequestDto;
 import com.disney.model.dto.response.GenreResponseDto;
 import com.disney.service.GenreService;
+import com.disney.util.ApiUtils;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -11,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/genres")
+@RequestMapping(ApiUtils.GENRE_BASE_URL)
 public class GenreController {
     private final GenreService genreService;
 
@@ -25,13 +26,13 @@ public class GenreController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @PatchMapping("/{genreId}")
+    @PatchMapping(ApiUtils.GENRE_URI_VARIABLE)
     public ResponseEntity<GenreResponseDto> updateGenreById(@PathVariable String genreId,
                                                             @RequestBody GenreUpdateRequestDto requestDto) {
         return ResponseEntity.status(HttpStatus.OK).body(genreService.updateGenre(genreId, requestDto));
     }
 
-    @GetMapping("/{genreId}")
+    @GetMapping(ApiUtils.GENRE_URI_VARIABLE)
     public ResponseEntity<GenreResponseDto> getGenre(@PathVariable String genreId) {
         return ResponseEntity.status(HttpStatus.OK).body(genreService.getGenreById(genreId));
     }
