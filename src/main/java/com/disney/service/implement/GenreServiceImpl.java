@@ -58,7 +58,7 @@ public class GenreServiceImpl implements GenreService {
     })
     public GenreResponseDto updateGenre(String id, GenreUpdateRequestDto requestDto) {
         if (Objects.isNull(id))
-            throw new InvalidParameterException("Invalid argument passed: genre object to update");
+            throw new InvalidParameterException("Invalid argument passed: genre ID");
         Genre genreToUpdate = genreRepository.findById(ApiUtils.getUUIDFromString(id))
                 .orElseThrow(() -> new EntityNotFoundException("Genre not found for ID %s".formatted(id)));
         genreToUpdate.setName(requestDto.name());
@@ -86,7 +86,6 @@ public class GenreServiceImpl implements GenreService {
     @Override
     public Page<GenreResponseDto> listMovieGenres(int pageNumber) {
         Pageable pageable = PageRequest.of(pageNumber, ApiUtils.ELEMENTS_PER_PAGE);
-        pageable.next().getPageNumber();
         return genreRepository.findAll(pageable).map(genreMapper::toDTO);
     }
 }
