@@ -4,6 +4,7 @@ import com.disney.model.dto.request.CharacterRequestDto;
 import com.disney.model.dto.request.CharacterUpdateRequestDto;
 import com.disney.model.dto.response.CharacterResponseDto;
 import com.disney.service.CharacterService;
+import com.disney.util.ApiUtils;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Set;
 
 @RestController
-@RequestMapping("/api/v1/characters")
+@RequestMapping(ApiUtils.CHARACTER_BASE_URL)
 public class CharacterController {
     private final CharacterService characterService;
 
@@ -27,13 +28,13 @@ public class CharacterController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @PatchMapping("/{characterId}")
+    @PatchMapping(ApiUtils.CHARACTER_URI_VARIABLE)
     public ResponseEntity<CharacterResponseDto> updateCharacter(@PathVariable String characterId,
                                                                 @RequestBody CharacterUpdateRequestDto requestDto) {
         return ResponseEntity.status(HttpStatus.OK).body(characterService.updateCharacter(characterId, requestDto));
     }
 
-    @GetMapping("/{characterId}")
+    @GetMapping(ApiUtils.CHARACTER_URI_VARIABLE)
     public ResponseEntity<CharacterResponseDto> getCharacter(@PathVariable String characterId) {
         return ResponseEntity.status(HttpStatus.OK).body(characterService.getCharacterById(characterId));
     }
@@ -48,7 +49,7 @@ public class CharacterController {
                 .body(characterService.listCharacters(pageNumber, name, age, moviesId));
     }
 
-    @DeleteMapping("/{characterId}")
+    @DeleteMapping(ApiUtils.CHARACTER_URI_VARIABLE)
     public ResponseEntity<Void> deleteCharacter(@PathVariable String characterId) {
         characterService.deleteCharacter(characterId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
