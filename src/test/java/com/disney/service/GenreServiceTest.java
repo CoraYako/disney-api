@@ -24,10 +24,14 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
 import java.security.InvalidParameterException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.UUID;
 
+import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.*;
 
@@ -51,21 +55,18 @@ public class GenreServiceTest {
     @BeforeEach
     void setUp() {
         genreRequestDto = new GenreRequestDto("thriller");
-
         genreOne = Genre.builder()
                 .id(UUID.randomUUID())
                 .name(genreRequestDto.name())
-                .movies(Collections.emptySet())
+                .movies(emptySet())
                 .build();
         genreTwo = Genre.builder()
                 .id(UUID.randomUUID())
                 .name("animation")
-                .movies(Collections.emptySet())
+                .movies(emptySet())
                 .build();
-
-        genreResponseOne = new GenreResponseDto(genreOne.getId().toString(), genreOne.getName(), Collections.emptySet());
-        genreResponseTwo = new GenreResponseDto(genreTwo.getId().toString(), genreTwo.getName(), Collections.emptySet());
-
+        genreResponseOne = new GenreResponseDto(genreOne.getId().toString(), genreOne.getName(), emptySet());
+        genreResponseTwo = new GenreResponseDto(genreTwo.getId().toString(), genreTwo.getName(), emptySet());
         updateRequestDto = new GenreUpdateRequestDto("NEW NAME VALUE");
     }
 
@@ -88,7 +89,7 @@ public class GenreServiceTest {
         assertThat(genreCaptured).usingRecursiveComparison().isEqualTo(genreOne);
     }
 
-    @DisplayName(value = "JUnit Test for create Movie Genre and throws EntityExistsException")
+    @DisplayName(value = "JUnit Test for create Genre when a genre with same name exists in database")
     @Test
     public void givenGenreObject_whenTryToCreateGenre_thenThrowsForNameTaken() {
         // given
@@ -96,32 +97,30 @@ public class GenreServiceTest {
         given(genreRepository.existsByName(genreRequestDto.name())).willReturn(true);
 
         // when
-        assertThatThrownBy(() -> genreService.createGenre(genreRequestDto))
-                .isInstanceOf(EntityExistsException.class)
-                .hasMessage(exceptionMessage);
+        Throwable result = catchThrowable(() -> genreService.createGenre(genreRequestDto));
 
         //then
+        assertThat(result).isNotNull().isInstanceOf(EntityExistsException.class).hasMessage(exceptionMessage);
         then(genreRepository).should(never()).save(any(Genre.class));
         then(genreMapper).should(never()).toEntity(any(GenreRequestDto.class));
     }
 
-    @DisplayName(value = "JUnit Test for create Movie Genre when GenreRequestDTO is null")
+    @DisplayName(value = "JUnit Test for create Genre when GenreRequestDTO is null")
     @Test
     public void givenGenreRequest_whenTryToCreateGenre_thenThrowsForNullObject() {
         // given
         String exceptionMessage = "Null argument passed: genre object";
 
         // when
-        assertThatThrownBy(() -> genreService.createGenre(null))
-                .isInstanceOf(InvalidParameterException.class)
-                .hasMessage(exceptionMessage);
+        Throwable result = catchThrowable(() -> genreService.createGenre(null));
 
         //then
+        assertThat(result).isNotNull().isInstanceOf(InvalidParameterException.class).hasMessage(exceptionMessage);
         then(genreRepository).shouldHaveNoInteractions();
         then(genreMapper).shouldHaveNoInteractions();
     }
 
-    @DisplayName(value = "JUnit Test for create Movie Genre when name is null or empty")
+    @DisplayName(value = "JUnit Test for create Genre when name is null or empty")
     @Test
     public void givenGenreRequest_whenTryToCreateGenre_thenThrowsForInvalidGenreName() {
         // given
@@ -129,11 +128,10 @@ public class GenreServiceTest {
         GenreRequestDto invalidGenreRequest = new GenreRequestDto("");
 
         // when
-        assertThatThrownBy(() -> genreService.createGenre(invalidGenreRequest))
-                .isInstanceOf(InvalidParameterException.class)
-                .hasMessage(exceptionMessage);
+        Throwable result = catchThrowable(() -> genreService.createGenre(invalidGenreRequest));
 
         //then
+        assertThat(result).isNotNull().isInstanceOf(InvalidParameterException.class).hasMessage(exceptionMessage);
         then(genreRepository).shouldHaveNoInteractions();
         then(genreMapper).should(never()).toEntity(any(GenreRequestDto.class));
     }
@@ -154,12 +152,13 @@ public class GenreServiceTest {
         Page<GenreResponseDto> result = genreService.listMovieGenres(pageNumber);
 
         //then
-        then(genreMapper).should(atLeastOnce()).toDTO(any(Genre.class));
+        then(genreMapper).should(times(2)).toDTO(any(Genre.class));
         then(genreRepository).should().findAll(pageable);
 
-        assertThat(result).isNotNull().isNotEmpty();
-        assertThat(result).hasSize(2).allMatch(Objects::nonNull);
-        assertThat(result).containsExactly(genreResponseOne, genreResponseTwo);
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).isNotEmpty();
+        assertThat(result.getTotalElements()).isEqualTo(2L);
+        assertThat(result.getContent()).containsExactly(genreResponseOne, genreResponseTwo);
     }
 
     @DisplayName(value = "JUnit Test for get empty Genre list")
@@ -179,8 +178,8 @@ public class GenreServiceTest {
         then(genreMapper).should(never()).toDTO(any(Genre.class));
         then(genreRepository).should(times(1)).findAll(pageable);
 
-        assertThat(result).isNotNull().isEmpty();
-        assertThat(result).hasSize(0).allMatch(Objects::isNull);
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).isEmpty();
     }
 
     @DisplayName(value = "JUnit Test for get Genre by string ID")
@@ -196,14 +195,14 @@ public class GenreServiceTest {
         GenreResponseDto result = genreService.getGenreById(stringUUID);
 
         //then
-        then(genreRepository).should(times(ApiUtils.INVOKED_ONE_TIME)).findById(uuid);
+        then(genreRepository).should(times(1)).findById(uuid);
         then(genreMapper).should().toDTO(genreOne);
 
         assertThat(result).isNotNull();
         assertThat(result).usingRecursiveAssertion().isEqualTo(genreResponseOne);
     }
 
-    @DisplayName(value = "JUnit Test for get Genre by string ID and throws EntityNotFoundException")
+    @DisplayName(value = "JUnit Test for get Genre by (String) ID and throws EntityNotFoundException")
     @Test
     public void givenId_whenGetGenreById_thenThrowsEntityNotFoundException() {
         // given
@@ -214,32 +213,31 @@ public class GenreServiceTest {
         given(genreRepository.findById(uuid)).willReturn(Optional.empty());
 
         // when
-        assertThatThrownBy(() -> genreService.getGenreById(stringUUID))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessage(expectedExceptionMessage);
+        Throwable result = catchThrowable(() -> genreService.getGenreById(stringUUID));
 
         //then
-        then(genreRepository).should(times(ApiUtils.INVOKED_ONE_TIME)).findById(uuid);
-        then(genreMapper).should(never()).toDTO(genreOne);
+        assertThat(result).isNotNull().isInstanceOf(EntityNotFoundException.class).hasMessage(expectedExceptionMessage);
+        then(genreRepository).should(times(1)).findById(uuid);
+        then(genreMapper).shouldHaveNoInteractions();
     }
 
-    @DisplayName(value = "JUnit Test for get Genre by string ID with an invalid ID")
+    @DisplayName(value = "JUnit Test for get Genre by (String) ID with an invalid ID")
     @Test
     public void givenInvalidId_whenGetGenreById_thenThrowsInvalidParameterException() {
         // given
         String expectedExceptionMessage = "Invalid argument ID supplied";
 
         // when
-        assertThatThrownBy(() -> genreService.getGenreById((String) null))
-                .isInstanceOf(InvalidParameterException.class)
-                .hasMessage(expectedExceptionMessage);
+        Throwable result = catchThrowable(() -> genreService.getGenreById((String) null));
 
         //then
+        assertThat(result).isNotNull().isInstanceOf(InvalidParameterException.class)
+                .hasMessage(expectedExceptionMessage);
         then(genreRepository).shouldHaveNoInteractions();
         then(genreMapper).shouldHaveNoInteractions();
     }
 
-    @DisplayName(value = "JUnit Test for get Genre by UUID")
+    @DisplayName(value = "JUnit Test for get Genre by (UUID) ID")
     @Test
     public void givenUUID_whenGetGenreById_thenReturnTheConcreteGenreObject() {
         // given
@@ -250,12 +248,12 @@ public class GenreServiceTest {
         Genre result = genreService.getGenreById(uuid);
 
         //then
-        then(genreRepository).should(times(ApiUtils.INVOKED_ONE_TIME)).findById(uuid);
+        then(genreRepository).should(times(1)).findById(uuid);
         assertThat(result).isNotNull();
         assertThat(result).usingRecursiveAssertion().isEqualTo(genreOne);
     }
 
-    @DisplayName(value = "JUnit Test for get Genre by UUID and throws EntityNotFoundException")
+    @DisplayName(value = "JUnit Test for get Genre by (UUID) ID and throws EntityNotFoundException")
     @Test
     public void givenUUID_whenGetGenreById_thenThrowsEntityNotFoundException() {
         // given
@@ -266,27 +264,26 @@ public class GenreServiceTest {
         given(genreRepository.findById(uuid)).willReturn(Optional.empty());
 
         // when
-        assertThatThrownBy(() -> genreService.getGenreById(stringUUID))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessage(expectedExceptionMessage);
+        Throwable result = catchThrowable(() -> genreService.getGenreById(stringUUID));
 
         //then
-        then(genreRepository).should(times(ApiUtils.INVOKED_ONE_TIME)).findById(uuid);
-        then(genreMapper).should(never()).toDTO(genreOne);
+        assertThat(result).isNotNull().isInstanceOf(EntityNotFoundException.class).hasMessage(expectedExceptionMessage);
+        then(genreRepository).should(times(1)).findById(uuid);
+        then(genreMapper).shouldHaveNoInteractions();
     }
 
-    @DisplayName(value = "JUnit Test for get Genre by UUID with an invalid UUID")
+    @DisplayName(value = "JUnit Test for get Genre by (UUID) ID with an invalid ID")
     @Test
     public void givenInvalidUUID_whenGetGenreById_thenThrowsInvalidParameterException() {
         // given
         String expectedExceptionMessage = "Invalid argument ID supplied";
 
         // when
-        assertThatThrownBy(() -> genreService.getGenreById((UUID) null))
-                .isInstanceOf(InvalidParameterException.class)
-                .hasMessage(expectedExceptionMessage);
+        Throwable result = catchThrowable(() -> genreService.getGenreById((UUID) null));
 
         //then
+        assertThat(result).isNotNull().isInstanceOf(InvalidParameterException.class)
+                .hasMessage(expectedExceptionMessage);
         then(genreRepository).shouldHaveNoInteractions();
     }
 
@@ -298,7 +295,7 @@ public class GenreServiceTest {
         Genre updatedGenreOne = genreOne;
         updatedGenreOne.setName(updateRequestDto.name());
         GenreResponseDto expectedResponse = new GenreResponseDto(updatedGenreOne.getId().toString(),
-                updatedGenreOne.getName(), Collections.emptySet());
+                updatedGenreOne.getName(), emptySet());
 
         given(genreRepository.findById(genreOne.getId())).willReturn(Optional.of(genreOne));
         given(genreRepository.save(updatedGenreOne)).willReturn(updatedGenreOne);
@@ -308,14 +305,14 @@ public class GenreServiceTest {
         GenreResponseDto result = genreService.updateGenre(genreId, updateRequestDto);
 
         //then
-        then(genreRepository).should(times(ApiUtils.INVOKED_ONE_TIME)).findById(genreOne.getId());
-        then(genreRepository).should(times(ApiUtils.INVOKED_ONE_TIME)).save(updatedGenreOne);
-        then(genreMapper).should(times(ApiUtils.INVOKED_ONE_TIME)).toDTO(updatedGenreOne);
+        then(genreRepository).should(times(1)).findById(genreOne.getId());
+        then(genreRepository).should(times(1)).save(updatedGenreOne);
+        then(genreMapper).should(times(1)).toDTO(updatedGenreOne);
 
         assertThat(result).isNotNull().usingRecursiveComparison().isEqualTo(expectedResponse);
     }
 
-    @DisplayName(value = "JUnit Test for update Genre and the Genre is not present in the database")
+    @DisplayName(value = "JUnit Test for update Genre and the Genre to update is not present in the database")
     @Test
     public void givenIdAndRequest_whenFindGenreToUpdate_thenThrowsEntityNotFoundException() {
         // given
@@ -326,12 +323,11 @@ public class GenreServiceTest {
         given(genreRepository.findById(genreUUID)).willReturn(Optional.empty());
 
         // when
-        assertThatThrownBy(() -> genreService.updateGenre(genreId, updateRequestDto))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessage(expectedMessage);
+        Throwable result = catchThrowable(() -> genreService.updateGenre(genreId, updateRequestDto));
 
         //then
-        then(genreRepository).should(times(ApiUtils.INVOKED_ONE_TIME)).findById(any(UUID.class));
+        assertThat(result).isNotNull().isInstanceOf(EntityNotFoundException.class).hasMessage(expectedMessage);
+        then(genreRepository).should(times(1)).findById(any(UUID.class));
         then(genreRepository).should(never()).save(any(Genre.class));
         then(genreMapper).shouldHaveNoInteractions();
     }
@@ -343,11 +339,10 @@ public class GenreServiceTest {
         String expectedMessage = "Invalid argument passed: genre ID";
 
         // when
-        assertThatThrownBy(() -> genreService.updateGenre(null, updateRequestDto))
-                .isInstanceOf(InvalidParameterException.class)
-                .hasMessage(expectedMessage);
+        Throwable result = catchThrowable(() -> genreService.updateGenre(null, updateRequestDto));
 
         //then
+        assertThat(result).isNotNull().isInstanceOf(InvalidParameterException.class).hasMessage(expectedMessage);
         then(genreRepository).shouldHaveNoInteractions();
         then(genreRepository).shouldHaveNoInteractions();
     }
