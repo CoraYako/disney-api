@@ -59,7 +59,6 @@ public class CharacterServiceImpl implements CharacterService {
             throw new InvalidParameterException("Invalid argument passed: Character object");
         if (characterRepository.existsByName(requestDto.name()))
             throw new EntityExistsException("The character '%s' is already registered".formatted(requestDto.name()));
-        // saves the current character before append the movies (if present) to the character
         Character character = characterMapper.toEntity(requestDto);
 
         // takes the list of movies and adds the movies to the current character and vise versa
@@ -81,7 +80,7 @@ public class CharacterServiceImpl implements CharacterService {
     })
     public CharacterResponseDto updateCharacter(String id, CharacterUpdateRequestDto updateRequestDto) {
         if (Objects.isNull(id))
-            throw new InvalidParameterException("Invalid parameter provided: Character to update");
+            throw new InvalidParameterException("Invalid parameter provided: Character ID");
         Character characterToUpdate = characterRepository.findById(ApiUtils.getUUIDFromString(id))
                 .orElseThrow(() -> new EntityNotFoundException("Character not found for ID %s".formatted(id)));
 
@@ -128,7 +127,6 @@ public class CharacterServiceImpl implements CharacterService {
     public Page<CharacterResponseDto> listCharacters(int pageNumber, String characterName,
                                                      int age, Set<String> moviesName) {
         Pageable pageable = PageRequest.of(pageNumber, ApiUtils.ELEMENTS_PER_PAGE);
-        pageable.next().getPageNumber();
         return characterRepository.findAll(characterSpec.getByFilters(characterName, age, moviesName), pageable)
                 .map(characterMapper::toDTO);
     }
