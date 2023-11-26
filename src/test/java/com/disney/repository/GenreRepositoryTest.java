@@ -33,35 +33,35 @@ public class GenreRepositoryTest {
                 .build();
     }
 
-    @DisplayName(value = "JUnit Test for True Assertion when the Genre of a Movie Exists")
+    @DisplayName(value = "JUnit Test for check if Genre name exists in database and it's true")
     @Test
     public void givenAName_whenCheckIfExists_thenReturnTrue() {
         // given
-        String MOVIE_GENRE_NAME = "thriller";
+        final String genreName = "thriller";
         genreRepository.save(genre);
 
         // when
-        boolean result = genreRepository.existsByName(MOVIE_GENRE_NAME);
+        boolean result = genreRepository.existsByName(genreName);
 
         //then
         assertThat(result).isTrue();
     }
 
-    @DisplayName(value = "JUnit Test for False Assertion when the Genre of a Movie Does Not Exists")
+    @DisplayName(value = "JUnit Test for check if Genre name exists in database and it's false")
     @Test
     public void givenAName_whenCheckIfExists_thenReturnFalse() {
         // given
-        String INVALID_GENRE_NAME = "null";
+        final String genreName = "animation";
         genreRepository.save(genre);
 
         // when
-        boolean result = genreRepository.existsByName(INVALID_GENRE_NAME);
+        boolean result = genreRepository.existsByName(genreName);
 
         //then
         assertThat(result).isFalse();
     }
 
-    @DisplayName(value = "JUnit Test for Save Movie Genre")
+    @DisplayName(value = "JUnit Test for successfully Save Genre")
     @Test
     public void givenGenreObject_whenSave_thenReturnSavedGenre() {
         // given
@@ -69,18 +69,18 @@ public class GenreRepositoryTest {
         Genre savedGenre = genreRepository.save(genre);
 
         // then
-        assertThat(savedGenre).isInstanceOf(Genre.class);
         assertThat(savedGenre).isNotNull();
+        assertThat(savedGenre).isInstanceOf(Genre.class);
         assertThat(savedGenre.getId()).isInstanceOf(UUID.class);
         assertThat(savedGenre.getName()).isNotEmpty();
         assertThat(savedGenre.getMovies()).isEmpty();
     }
 
-    @DisplayName(value = "JUnit Test for Paginate Movie Genres List")
+    @DisplayName(value = "JUnit Test for list all Genres")
     @Test
-    public void givenGenreObjects_whenFindAll_thenReturnPaginatedList() {
+    public void givenGenreObjects_whenFindAll_thenReturnPaginatedGenreList() {
         // given
-        Genre genre1 = Genre.builder()
+        final Genre genre1 = Genre.builder()
                 .name("animation")
                 .movies(Collections.emptySet())
                 .build();
@@ -91,9 +91,9 @@ public class GenreRepositoryTest {
         Page<Genre> genres = genreRepository.findAll(PageRequest.of(0, 5));
 
         // then
-        assertThat(genres).isNotNull();
-        assertThat(genres).isNotEmpty().contains(savedGenre1, savedGenre2);
-        assertThat(genres).size().isEqualTo(2);
+        assertThat(genres.getContent()).isNotNull();
+        assertThat(genres.getContent()).isNotEmpty().contains(savedGenre1, savedGenre2);
+        assertThat(genres.getTotalElements()).isEqualTo(2);
     }
 
     @DisplayName(value = "JUnit Test for get Genre by ID")
@@ -103,7 +103,7 @@ public class GenreRepositoryTest {
         Genre genreSaved = genreRepository.save(genre);
 
         // when
-        UUID GENRE_ID = genreSaved.getId();
+        final UUID GENRE_ID = genreSaved.getId();
         Optional<Genre> optionalGenre = genreRepository.findById(GENRE_ID);
 
         //then
@@ -116,8 +116,8 @@ public class GenreRepositoryTest {
     public void givenGenreObject_whenUpdateValues_thenReturnUpdatedGenre() {
         // given
         Genre savedGenre = genreRepository.save(genre);
-        UUID GENRE_ID = savedGenre.getId();
-        String NEW_NAME = "suspense";
+        final UUID GENRE_ID = savedGenre.getId();
+        final String NEW_NAME = "suspense";
 
         // when
         Optional<Genre> optionalSavedGenre = genreRepository.findById(GENRE_ID);

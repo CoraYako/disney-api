@@ -160,8 +160,7 @@ public class GenreControllerTest {
         final List<GenreResponseDto> mockList = List.of(mock(GenreResponseDto.class), mock(GenreResponseDto.class));
         final PageRequest pageable = PageRequest.of(pageNumber, ELEMENTS_PER_PAGE);
         final Page<GenreResponseDto> genreList = new PageImpl<>(mockList, pageable, mockList.size());
-
-        given(genreService.listMovieGenres(pageNumber)).willReturn(genreList);
+        given(genreService.listMovieGenres(anyInt())).willReturn(genreList);
 
         // when
         ResultActions response = mockMvc.perform(get(GENRE_BASE_URL).contentType(APPLICATION_JSON)
@@ -181,8 +180,8 @@ public class GenreControllerTest {
         // given
         final Genre genre = Genre.builder().id(UUID.randomUUID()).name("Genre Name").movies(emptySet()).build();
         final String genreId = genre.getId().toString();
-
-        given(genreService.getGenreById(genreId)).willReturn(new GenreResponseDto(genreId, genre.getName(), emptySet()));
+        given(genreService.getGenreById(anyString()))
+                .willReturn(new GenreResponseDto(genreId, genre.getName(), emptySet()));
 
         // when
         ResultActions response = mockMvc.perform(get(URL_TEMPLATE, genreId).contentType(APPLICATION_JSON));
@@ -233,7 +232,7 @@ public class GenreControllerTest {
                 .path("uri=/api/v1/genres/" + genreId)
                 .message("Genre not found for ID %s".formatted(genreId))
                 .build();
-        given(genreService.getGenreById(genreId))
+        given(genreService.getGenreById(anyString()))
                 .willThrow(new EntityNotFoundException("Genre not found for ID %s".formatted(genreId)));
 
         // when
@@ -254,8 +253,7 @@ public class GenreControllerTest {
         // given
         final String genreId = UUID.randomUUID().toString();
         final GenreResponseDto expectedResponse = new GenreResponseDto(genreId, updateGenreRequest.name(), emptySet());
-
-        given(genreService.updateGenre(genreId, updateGenreRequest)).willReturn(expectedResponse);
+        given(genreService.updateGenre(anyString(), any(GenreUpdateRequestDto.class))).willReturn(expectedResponse);
 
         // when
         ResultActions response = mockMvc.perform(patch(URL_TEMPLATE, genreId).contentType(APPLICATION_JSON)
@@ -280,7 +278,6 @@ public class GenreControllerTest {
                 .path("uri=/api/v1/genres/" + genreId)
                 .message("Genre not found for ID %s".formatted(genreId))
                 .build();
-
         given(genreService.updateGenre(anyString(), any(GenreUpdateRequestDto.class)))
                 .willThrow(new EntityNotFoundException("Genre not found for ID %s".formatted(genreId)));
 
