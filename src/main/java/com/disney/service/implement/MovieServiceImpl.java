@@ -81,7 +81,7 @@ public class MovieServiceImpl implements MovieService {
     })
     public MovieResponseDto updateMovie(String id, MovieUpdateRequestDto requestDto) {
         if (Objects.isNull(id))
-            throw new InvalidParameterException("Invalid argument passed: movie");
+            throw new InvalidParameterException("Invalid argument passed: movie Id");
         Movie movieToUpdate = movieRepository.findById(ApiUtils.getUUIDFromString(id))
                 .orElseThrow(() -> new EntityNotFoundException("Movie not found for ID %s".formatted(id)));
 
