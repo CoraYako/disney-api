@@ -1,4 +1,4 @@
-package com.disney.service;
+package com.disney.unit.service;
 
 import com.disney.model.dto.request.CharacterRequestDto;
 import com.disney.model.dto.request.CharacterUpdateRequestDto;
@@ -10,6 +10,7 @@ import com.disney.model.entity.Movie;
 import com.disney.model.mapper.CharacterMapper;
 import com.disney.repository.CharacterRepository;
 import com.disney.repository.specification.CharacterSpecification;
+import com.disney.service.MovieService;
 import com.disney.service.implement.CharacterServiceImpl;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -90,36 +91,40 @@ public class CharacterServiceTest {
                 .history("Character Two history description")
                 .movies(new HashSet<>(Set.of(movie)))
                 .build();
-        requestDto = new CharacterRequestDto(
-                "character-image.jpg",
-                "Character Name",
-                31,
-                92.7,
-                "Character history description",
-                emptySet());
-        completeRequestDto = new CharacterRequestDto(
-                "character-image.jpg",
-                "Character Name",
-                31,
-                92.7,
-                "Character history description",
-                Set.of(movie.getId().toString()));
-        characterOneResponseDto = new CharacterResponseDto(
-                characterOne.getId().toString(),
-                characterOne.getImage(),
-                characterOne.getName(),
-                characterOne.getAge(),
-                characterOne.getWeight(),
-                characterOne.getHistory(),
-                emptySet());
-        characterTwoResponseDto = new CharacterResponseDto(
-                characterTwo.getId().toString(),
-                characterTwo.getImage(),
-                characterTwo.getName(),
-                characterTwo.getAge(),
-                characterTwo.getWeight(),
-                characterTwo.getHistory(),
-                Set.of(mock(MovieBasicInfoResponseDto.class)));
+        requestDto = CharacterRequestDto.builder()
+                .image("character-image.jpg")
+                .name("Character Name")
+                .age(31)
+                .weight(92.7)
+                .history("Character history description")
+                .moviesId(emptySet())
+                .build();
+        completeRequestDto = CharacterRequestDto.builder()
+                .image("character-image.jpg")
+                .name("Character Name")
+                .age(31)
+                .weight(92.7)
+                .history("Character history description")
+                .moviesId(Set.of(movie.getId().toString()))
+                .build();
+        characterOneResponseDto = CharacterResponseDto.builder()
+                .id(characterOne.getId().toString())
+                .image(characterOne.getImage())
+                .name(characterOne.getName())
+                .age(characterOne.getAge())
+                .weight(characterOne.getWeight())
+                .history(characterOne.getHistory())
+                .movies(emptySet())
+                .build();
+        characterTwoResponseDto = CharacterResponseDto.builder()
+                .id(characterTwo.getId().toString())
+                .image(characterTwo.getImage())
+                .name(characterTwo.getName())
+                .age(characterTwo.getAge())
+                .weight(characterTwo.getWeight())
+                .history(characterTwo.getHistory())
+                .movies(Set.of(mock(MovieBasicInfoResponseDto.class)))
+                .build();
         pageable = PageRequest.of(0, ELEMENTS_PER_PAGE);
     }
 
@@ -197,13 +202,11 @@ public class CharacterServiceTest {
         BDDAssertions.then(result).isInstanceOf(InvalidParameterException.class).hasMessage(expectedMessage);
     }
 
-    @DisplayName(value = "JUnit Test for create Character with empty name in CharacterRequestDto object and throws")
+    @DisplayName(value = "JUnit Test for create Character with empty values in CharacterRequestDto object and throws")
     @Test
     public void givenRequestObject_whenTryToCreateCharacter_thenThrowsInvalidParameterExceptionForEmptyName() {
         // given
-        final String emptyName = "";
-        final CharacterRequestDto nullRequest = new CharacterRequestDto(
-                "character-image.jpg", emptyName, 31, 98, "Random description", emptySet());
+        final CharacterRequestDto nullRequest = CharacterRequestDto.builder().build();
         final String expectedMessage = "Invalid argument passed: Character object";
 
         // when
@@ -220,22 +223,24 @@ public class CharacterServiceTest {
     public void givenUpdateRequest_whenUpdateCharacter_thenReturnTheCharacterUpdated() {
         // given
         final String characterId = characterOne.getId().toString();
-        final CharacterUpdateRequestDto updateRequest = new CharacterUpdateRequestDto(
-                "new-image.jpg",
-                "New Character Name",
-                210,
-                120.5,
-                "New character history.",
-                emptySet(),
-                emptySet());
-        final CharacterResponseDto expectedResponse = new CharacterResponseDto(
-                characterId,
-                updateRequest.image(),
-                updateRequest.name(),
-                updateRequest.age(),
-                updateRequest.weight(),
-                updateRequest.history(),
-                emptySet());
+        final CharacterUpdateRequestDto updateRequest = CharacterUpdateRequestDto.builder()
+                .image("new-image.jpg")
+                .name("New Character Name")
+                .age(210)
+                .weight(120.5)
+                .history("New character history.")
+                .moviesToUnlink(emptySet())
+                .moviesWhereAppears(emptySet())
+                .build();
+        final CharacterResponseDto expectedResponse = CharacterResponseDto.builder()
+                .id(characterId)
+                .image(updateRequest.image())
+                .name(updateRequest.name())
+                .age(updateRequest.age())
+                .weight(updateRequest.weight())
+                .history(updateRequest.history())
+                .movies(emptySet())
+                .build();
 
         given(characterRepository.findById(any(UUID.class))).willReturn(Optional.ofNullable(characterOne));
         given(characterRepository.save(any(Character.class))).willAnswer(invocation -> invocation.getArgument(0));
@@ -262,8 +267,9 @@ public class CharacterServiceTest {
 
         // given
         final String characterId = characterOne.getId().toString();
-        final CharacterUpdateRequestDto updateRequest =
-                new CharacterUpdateRequestDto(null, null, 0, 0, null, emptySet(), Set.of(movie.getId().toString()));
+        final CharacterUpdateRequestDto updateRequest = CharacterUpdateRequestDto.builder()
+                .moviesToUnlink(Set.of(movie.getId().toString()))
+                .build();
 
         given(characterRepository.findById(any(UUID.class))).willReturn(Optional.ofNullable(characterOne));
         given(movieService.removeCharacterFromMovie(any(UUID.class), any(Character.class))).willReturn(movie);
@@ -289,8 +295,9 @@ public class CharacterServiceTest {
 
         // given
         final String characterId = characterTwo.getId().toString();
-        final CharacterUpdateRequestDto updateRequest =
-                new CharacterUpdateRequestDto(null, null, 0, 0, null, Set.of(movie.getId().toString()), emptySet());
+        final CharacterUpdateRequestDto updateRequest = CharacterUpdateRequestDto.builder()
+                .moviesWhereAppears(Set.of(movie.getId().toString()))
+                .build();
 
         given(characterRepository.findById(any(UUID.class))).willReturn(Optional.ofNullable(characterTwo));
         given(movieService.appendCharacterToMovie(any(UUID.class), any(Character.class))).willAnswer(
@@ -357,7 +364,7 @@ public class CharacterServiceTest {
     public void givenId_whenGetCharacterById_thenThrowsEntityNotFoundException() {
         // given
         final String characterId = UUID.randomUUID().toString();
-        final String expectedMessage = "Character not found for ID %s".formatted(characterId);
+        final String expectedMessage = STR."Character not found for ID \{characterId}";
         given(characterRepository.findById(any(UUID.class))).willReturn(Optional.empty());
 
         // when
@@ -403,7 +410,7 @@ public class CharacterServiceTest {
     public void givenUUID_whenGetCharacterById_thenThrowsEntityNotFoundException() {
         // given
         final UUID characterId = UUID.randomUUID();
-        final String expectedMessage = "Character not found for ID %s".formatted(characterId);
+        final String expectedMessage = STR."Character not found for ID \{characterId}";
         given(characterRepository.findById(any(UUID.class))).willReturn(Optional.empty());
 
         // when
@@ -461,7 +468,7 @@ public class CharacterServiceTest {
     public void givenId_whenSearchFoDeleteCharacter_thenThrowsEntityNotFoundException() {
         // given
         final String characterId = UUID.randomUUID().toString();
-        final String expectedMessage = "Character not found for ID %s".formatted(characterId);
+        final String expectedMessage = STR."Character not found for ID \{characterId}";
         given(characterRepository.findById(any(UUID.class))).willReturn(Optional.empty());
 
         // when

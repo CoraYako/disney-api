@@ -1,4 +1,4 @@
-package com.disney.service;
+package com.disney.unit.service;
 
 import com.disney.model.InvalidUUIDFormatException;
 import com.disney.model.dto.request.GenreRequestDto;
@@ -55,7 +55,9 @@ public class GenreServiceTest {
 
     @BeforeEach
     void setUp() {
-        genreRequestDto = new GenreRequestDto("thriller");
+        genreRequestDto = GenreRequestDto.builder()
+                .name("thriller")
+                .build();
         genreOne = Genre.builder()
                 .id(UUID.randomUUID())
                 .name(genreRequestDto.name())
@@ -66,9 +68,19 @@ public class GenreServiceTest {
                 .name("animation")
                 .movies(emptySet())
                 .build();
-        genreResponseOne = new GenreResponseDto(genreOne.getId().toString(), genreOne.getName(), emptySet());
-        genreResponseTwo = new GenreResponseDto(genreTwo.getId().toString(), genreTwo.getName(), emptySet());
-        updateRequestDto = new GenreUpdateRequestDto("NEW NAME VALUE");
+        genreResponseOne = GenreResponseDto.builder()
+                .id(genreOne.getId().toString())
+                .name(genreOne.getName())
+                .movies(emptySet())
+                .build();
+        genreResponseTwo = GenreResponseDto.builder()
+                .id(genreTwo.getId().toString())
+                .name(genreTwo.getName())
+                .movies(emptySet())
+                .build();
+        updateRequestDto = GenreUpdateRequestDto.builder()
+                .name("NEW NAME VALUE")
+                .build();
     }
 
     @DisplayName(value = "JUnit Test for successfully create and save a Genre")
@@ -93,7 +105,7 @@ public class GenreServiceTest {
     @Test
     public void givenGenreObject_whenTryToCreateGenre_thenThrowsForNameTaken() {
         // given
-        final String exceptionMessage = "The Genre '%s' is already registered.".formatted(genreRequestDto.name());
+        final String exceptionMessage = STR."The Genre '\{genreRequestDto.name()}' is already registered.";
         given(genreRepository.existsByName(anyString())).willReturn(true);
 
         // when
@@ -125,7 +137,7 @@ public class GenreServiceTest {
     public void givenGenreRequest_whenTryToCreateGenre_thenThrowsForInvalidGenreName() {
         // given
         final String exceptionMessage = "Null argument passed: genre object";
-        final GenreRequestDto invalidGenreRequest = new GenreRequestDto("");
+        final GenreRequestDto invalidGenreRequest = GenreRequestDto.builder().build();
 
         // when
         Throwable result = catchThrowable(() -> genreService.createGenre(invalidGenreRequest));
@@ -201,7 +213,7 @@ public class GenreServiceTest {
     public void givenId_whenGetGenreDtoById_thenThrowsEntityNotFoundException() {
         // given
         final String stringUUID = UUID.randomUUID().toString();
-        final String expectedExceptionMessage = "Genre not found for ID %s".formatted(stringUUID);
+        final String expectedExceptionMessage = STR."Genre not found for ID \{stringUUID}";
         given(genreRepository.findById(any(UUID.class))).willReturn(Optional.empty());
 
         // when
@@ -234,8 +246,8 @@ public class GenreServiceTest {
     @Test
     public void givenInvalidIdFormat_whenTryToGetGenreDtoById_thenThrowsForInvalidIdFormat() {
         // given
-        final String invalidIdFormat = "null";
-        final String errorMsg = "Invalid UUID string: %s".formatted(invalidIdFormat);
+        final String invalidIdFormat = "123-456-789";
+        final String errorMsg = STR."Invalid UUID string: \{invalidIdFormat}";
 
         // when
         Throwable result = catchThrowable(() -> genreService.getGenreById(invalidIdFormat));
@@ -267,7 +279,7 @@ public class GenreServiceTest {
     public void givenUUID_whenGetGenreEntityById_thenThrowsEntityNotFoundException() {
         // given
         final UUID genreId = UUID.randomUUID();
-        final String errorMsg = "Genre not found for ID %s".formatted(genreId.toString());
+        final String errorMsg = STR."Genre not found for ID \{genreId.toString()}";
         given(genreRepository.findById(any(UUID.class))).willReturn(Optional.empty());
 
         // when
@@ -300,8 +312,12 @@ public class GenreServiceTest {
         final String genreId = genreOne.getId().toString();
         Genre updatedGenreOne = genreOne;
         updatedGenreOne.setName(updateRequestDto.name());
-        final GenreResponseDto expectedResponse = new GenreResponseDto(updatedGenreOne.getId().toString(),
-                updatedGenreOne.getName(), emptySet());
+        final GenreResponseDto expectedResponse = GenreResponseDto.builder()
+                .id(updatedGenreOne.getId().toString())
+                .name(updatedGenreOne.getName())
+                .movies(emptySet())
+                .build();
+
         given(genreRepository.findById(any(UUID.class))).willReturn(Optional.ofNullable(genreOne));
         given(genreRepository.save(updatedGenreOne)).willReturn(updatedGenreOne);
         given(genreMapper.toDTO(updatedGenreOne)).willReturn(expectedResponse);
@@ -321,7 +337,7 @@ public class GenreServiceTest {
     public void givenIdAndRequest_whenFindGenreToUpdate_thenThrowsEntityNotFoundException() {
         // given
         final String genreId = UUID.randomUUID().toString();
-        final String errorMsg = "Genre not found for ID %s".formatted(genreId);
+        final String errorMsg = STR."Genre not found for ID \{genreId}";
 
         given(genreRepository.findById(any(UUID.class))).willReturn(Optional.empty());
 
@@ -354,8 +370,8 @@ public class GenreServiceTest {
     @Test
     public void givenInvalidIdFormat_whenTryToUpdateGenre_thenThrowsForInvalidIdFormat() {
         // given
-        final String invalidIdFormat = "null";
-        final String errorMsg = "Invalid UUID string: %s".formatted(invalidIdFormat);
+        final String invalidIdFormat = "123-456-789";
+        final String errorMsg = STR."Invalid UUID string: \{invalidIdFormat}";
 
         // when
         Throwable result = catchThrowable(() -> genreService.getGenreById(invalidIdFormat));
