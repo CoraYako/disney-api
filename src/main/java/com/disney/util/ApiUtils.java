@@ -12,6 +12,8 @@ public class ApiUtils {
     public static final String GENRE_URI_VARIABLE = "/{genreId}";
     public static final String CHARACTER_BASE_URL = "/api/v1/characters";
     public static final String CHARACTER_URI_VARIABLE = "/{characterId}";
+    public static final String MOVIE_BASE_URL = "/api/v1/movies";
+    public static final String MOVIE_URI_VARIABLE = "/{movieId}";
     public static final int ELEMENTS_PER_PAGE = 10;
 
     public static boolean isASC(String order) {
