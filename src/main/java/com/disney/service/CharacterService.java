@@ -1,27 +1,27 @@
 package com.disney.service;
 
-import com.disney.model.entity.CharacterEntity;
-import com.disney.model.request.CharacterRequest;
-import com.disney.model.response.CharacterResponse;
-import com.disney.model.response.basic.CharacterBasicResponseList;
+import com.disney.model.dto.request.CharacterRequestDto;
+import com.disney.model.dto.request.CharacterUpdateRequestDto;
+import com.disney.model.dto.response.CharacterResponseDto;
+import com.disney.model.entity.Character;
+import jakarta.validation.constraints.NotNull;
+import org.springframework.data.domain.Page;
 
-import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 public interface CharacterService {
 
-    CharacterResponse save(CharacterRequest request);
+    void createCharacter(@NotNull CharacterRequestDto requestDto);
 
-    CharacterResponse update(Long id, CharacterRequest request);
+    CharacterResponseDto updateCharacter(@NotNull String id, CharacterUpdateRequestDto requestDto);
 
-    void delete(Long id);
+    void deleteCharacter(@NotNull String id);
 
-    CharacterEntity getEntityById(Long id);
+    Page<CharacterResponseDto> listCharacters(@NotNull int pageNumber, String characterName,
+                                              int age, Set<String> moviesName);
 
-    List<CharacterEntity> getCharactersById(List<CharacterResponse> charactersId);
+    CharacterResponseDto getCharacterById(@NotNull String id);
 
-    CharacterResponse getResponseById(Long id);
-
-    CharacterEntity getEntityByName(String name);
-
-    CharacterBasicResponseList getByFilters(String name, Integer age, List<Long> movies);
+    Character getCharacterById(@NotNull UUID id);
 }

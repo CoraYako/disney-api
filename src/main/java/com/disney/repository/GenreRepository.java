@@ -1,16 +1,11 @@
 package com.disney.repository;
 
-import com.disney.model.entity.GenreEntity;
+import com.disney.model.entity.Genre;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import java.util.UUID;
 
-@Repository
-public interface GenreRepository extends JpaRepository<GenreEntity, Long> {
+public interface GenreRepository extends JpaRepository<Genre, UUID> {
 
-    @Query(value = "SELECT * FROM genres WHERE name LIKE :name", nativeQuery = true)
-    Optional<GenreEntity> findByName(@Param("name") String name);
+    boolean existsByName(String name);
 }

@@ -1,46 +1,16 @@
 package com.disney.model.mapper;
 
-import com.disney.model.entity.GenreEntity;
-import com.disney.model.request.GenreRequest;
-import com.disney.model.response.GenreResponse;
-import com.disney.model.response.basic.GenreBasicResponse;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import com.disney.model.dto.request.GenreRequestDto;
+import com.disney.model.dto.response.GenreResponseDto;
+import com.disney.model.dto.response.basic.GenreBasicResponseDto;
+import com.disney.model.entity.Genre;
+import jakarta.validation.constraints.NotNull;
 
-@Component
-@RequiredArgsConstructor
-public class GenreMapper {
+public interface GenreMapper {
 
-    public GenreEntity DTO2Entity(GenreRequest request) {
-        GenreEntity entity = new GenreEntity();
-        entity.setImage(request.getImage());
-        entity.setName(request.getName());
-        return entity;
-    }
+    Genre toEntity(@NotNull GenreRequestDto dto);
 
-    public GenreResponse entity2DTO(GenreEntity entity) {
-        GenreResponse response = new GenreResponse();
-        response.setId(entity.getId());
-        response.setName(entity.getName());
-        response.setImage(entity.getImage());
-        return response;
-    }
+    GenreResponseDto toDTO(@NotNull Genre entity);
 
-    public GenreBasicResponse entity2BasicDTO(GenreEntity entity) {
-        GenreBasicResponse basicResponse = new GenreBasicResponse();
-        basicResponse.setId(entity.getId());
-        basicResponse.setName(entity.getName());
-        basicResponse.setImage(entity.getImage());
-        return basicResponse;
-    }
-
-    public GenreEntity refreshValues(GenreRequest request, GenreEntity entity) {
-        if (request.getName() != null && !request.getName().trim().isEmpty()) {
-            entity.setName(request.getName());
-        }
-        if (request.getImage() != null && !request.getImage().trim().isEmpty()) {
-            entity.setImage(request.getImage());
-        }
-        return entity;
-    }
+    GenreBasicResponseDto toBasicDTO(@NotNull Genre entity);
 }
