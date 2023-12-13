@@ -61,7 +61,7 @@ public record CharacterResponseDto(
             return this;
         }
 
-        public CharacterResponseDto builder() {
+        public CharacterResponseDto build() {
             return new CharacterResponseDto(id, image, name, age, weight, history, movies);
         }
     }
