@@ -1,5 +1,6 @@
-package com.disney.controller;
+package com.disney.unit.controller;
 
+import com.disney.controller.GenreController;
 import com.disney.model.HttpCodeResponse;
 import com.disney.model.InvalidUUIDFormatException;
 import com.disney.model.dto.request.GenreRequestDto;
@@ -24,6 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static com.disney.model.HttpCodeResponse.*;
@@ -60,14 +62,18 @@ public class GenreControllerTest {
 
     @BeforeEach
     void setUp() {
-        updateGenreRequest = new GenreUpdateRequestDto("New Name");
+        updateGenreRequest = GenreUpdateRequestDto.builder()
+                .name("New Name")
+                .build();
     }
 
     @DisplayName(value = "JUnit Test for successfully create Genre")
     @Test
     public void givenRequest_whenCreateGenre_thenStatusIsCreated() throws Exception {
         // given
-        final GenreRequestDto request = new GenreRequestDto("Genre Name");
+        final GenreRequestDto request = GenreRequestDto.builder()
+                .name("Genre Name")
+                .build();
         willDoNothing().given(genreService).createGenre(request);
 
         // when
@@ -83,9 +89,11 @@ public class GenreControllerTest {
     @Test
     public void givenRequestWithNullValues_whenTryToCreateGenre_thenStatusIsBadRequest() throws Exception {
         // given
-        final GenreRequestDto request = new GenreRequestDto(null);
-        final String msgNotNull = "The name can't be empty or null";
-        final String msgNotBlank = "The name can't be whitespaces";
+        final GenreRequestDto request = GenreRequestDto.builder().build();
+        final Map<Integer, String> errors = Map.of(
+                1, "The name can't be empty or null",
+                2, "The name can't be whitespaces"
+        );
 
         // when
         ResultActions response = mockMvc.perform(post(GENRE_BASE_URL).contentType(APPLICATION_JSON)
@@ -95,7 +103,7 @@ public class GenreControllerTest {
         then(genreService).shouldHaveNoInteractions();
         response.andDo(print())
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.name", anyOf(is(msgNotNull), is(msgNotBlank))));
+                .andExpect(jsonPath("$.name", anyOf(is(errors.get(1)), is(errors.get(2)))));
 
     }
 
@@ -104,11 +112,11 @@ public class GenreControllerTest {
     public void givenRequest_whenTryToCreateGenre_thenStatusIsBadRequest() throws Exception {
         // given
         final GenreRequestDto request = new GenreRequestDto("Genre Name");
-        final String message = "The Genre '%s' is already registered.".formatted(request.name());
+        final String message = STR."The Genre '\{request.name()}' is already registered.";
         final ApiErrorResponse expectedResponse = ApiErrorResponse.builder()
                 .timestamp(now())
                 .errorCode(DUPLICATED_RESOURCE)
-                .path("uri=" + GENRE_BASE_URL)
+                .path(STR."uri=\{GENRE_BASE_URL}")
                 .message(message)
                 .build();
 
@@ -135,7 +143,7 @@ public class GenreControllerTest {
         final ApiErrorResponse expectedResponse = ApiErrorResponse.builder()
                 .timestamp(now())
                 .errorCode(INVALID_REQUIRED_PAYLOAD)
-                .path("uri=" + GENRE_BASE_URL)
+                .path(STR."uri=\{GENRE_BASE_URL}")
                 .message("Required request body is missing")
                 .build();
 
@@ -178,10 +186,19 @@ public class GenreControllerTest {
     @Test
     public void givenGenreId_whenTryToPerformGetGenreById_thenReturnsTheRelatedGenre() throws Exception {
         // given
-        final Genre genre = Genre.builder().id(UUID.randomUUID()).name("Genre Name").movies(emptySet()).build();
+        final Genre genre = Genre.builder()
+                .id(UUID.randomUUID())
+                .name("Genre Name")
+                .movies(emptySet())
+                .build();
         final String genreId = genre.getId().toString();
-        given(genreService.getGenreById(anyString()))
-                .willReturn(new GenreResponseDto(genreId, genre.getName(), emptySet()));
+        given(genreService.getGenreById(anyString())).willReturn(
+                GenreResponseDto.builder()
+                        .id(genreId)
+                        .name(genre.getName())
+                        .movies(emptySet())
+                        .build()
+        );
 
         // when
         ResultActions response = mockMvc.perform(get(URL_TEMPLATE, genreId).contentType(APPLICATION_JSON));
@@ -199,18 +216,17 @@ public class GenreControllerTest {
     public void givenInvalidIdFormat_whenGetGenreById_thenStatusIsBadRequest() throws Exception {
         // given
         final String invalidUUIDFormat = "invalid_id";
-        final String message = "Invalid UUID string: %s".formatted(invalidUUIDFormat);
+        final String message = STR."Invalid UUID string: \{invalidUUIDFormat}";
         final ApiErrorResponse expectedResponse = ApiErrorResponse.builder()
                 .timestamp(now())
                 .errorCode(INVALID_ID_FORMAT)
-                .path("uri=/api/v1/genres/" + invalidUUIDFormat)
+                .path(STR."uri=\{GENRE_BASE_URL}/\{invalidUUIDFormat}")
                 .message(message)
                 .build();
         given(genreService.getGenreById(anyString())).willThrow(new InvalidUUIDFormatException(message));
 
         // when
-        ResultActions response = mockMvc.perform(get(URL_TEMPLATE, invalidUUIDFormat)
-                .contentType(APPLICATION_JSON).content(objectMapper.writeValueAsString(updateGenreRequest)));
+        ResultActions response = mockMvc.perform(get(URL_TEMPLATE, invalidUUIDFormat));
 
         //then
         then(genreService).should(times(1)).getGenreById(invalidUUIDFormat);
@@ -229,11 +245,11 @@ public class GenreControllerTest {
         final ApiErrorResponse expectedResponse = ApiErrorResponse.builder()
                 .timestamp(now())
                 .errorCode(HttpCodeResponse.RESOURCE_NOT_FOUND)
-                .path("uri=/api/v1/genres/" + genreId)
-                .message("Genre not found for ID %s".formatted(genreId))
+                .path(STR."uri=\{GENRE_BASE_URL}/\{genreId}")
+                .message(STR."Genre not found for ID \{genreId}")
                 .build();
         given(genreService.getGenreById(anyString()))
-                .willThrow(new EntityNotFoundException("Genre not found for ID %s".formatted(genreId)));
+                .willThrow(new EntityNotFoundException(STR."Genre not found for ID \{genreId}"));
 
         // when
         ResultActions response = mockMvc.perform(get(URL_TEMPLATE, genreId).contentType(APPLICATION_JSON));
@@ -252,7 +268,11 @@ public class GenreControllerTest {
     public void givenRequestBodyAndId_whenTryToUpdateGenre_thenReturnTheGenreUpdated() throws Exception {
         // given
         final String genreId = UUID.randomUUID().toString();
-        final GenreResponseDto expectedResponse = new GenreResponseDto(genreId, updateGenreRequest.name(), emptySet());
+        final GenreResponseDto expectedResponse = GenreResponseDto.builder()
+                .id(genreId)
+                .name(updateGenreRequest.name())
+                .movies(emptySet())
+                .build();
         given(genreService.updateGenre(anyString(), any(GenreUpdateRequestDto.class))).willReturn(expectedResponse);
 
         // when
@@ -275,11 +295,11 @@ public class GenreControllerTest {
         final ApiErrorResponse expectedResponse = ApiErrorResponse.builder()
                 .timestamp(now())
                 .errorCode(RESOURCE_NOT_FOUND)
-                .path("uri=/api/v1/genres/" + genreId)
-                .message("Genre not found for ID %s".formatted(genreId))
+                .path(STR."uri=\{GENRE_BASE_URL}/\{genreId}")
+                .message(STR."Genre not found for ID \{genreId}")
                 .build();
         given(genreService.updateGenre(anyString(), any(GenreUpdateRequestDto.class)))
-                .willThrow(new EntityNotFoundException("Genre not found for ID %s".formatted(genreId)));
+                .willThrow(new EntityNotFoundException(STR."Genre not found for ID \{genreId}"));
 
         // when
         ResultActions response = mockMvc.perform(patch(URL_TEMPLATE, genreId).contentType(APPLICATION_JSON)
@@ -302,7 +322,7 @@ public class GenreControllerTest {
         final ApiErrorResponse expectedResponse = ApiErrorResponse.builder()
                 .timestamp(now())
                 .errorCode(INVALID_REQUIRED_PAYLOAD)
-                .path("uri=/api/v1/genres/" + genreId)
+                .path(STR."uri=\{GENRE_BASE_URL}/\{genreId}")
                 .message("Required request body is missing")
                 .build();
 
@@ -322,12 +342,12 @@ public class GenreControllerTest {
     @Test
     public void givenInvalidIdProvided_whenTryToUpdateGenre_thenStatusIsBadRequest() throws Exception {
         // given
-        final String invalidUUIDFormat = "null";
-        final String message = "Invalid UUID string: %s".formatted(invalidUUIDFormat);
+        final String invalidUUIDFormat = "123-456-789";
+        final String message = STR."Invalid UUID string: \{invalidUUIDFormat}";
         final ApiErrorResponse expectedResponse = ApiErrorResponse.builder()
                 .timestamp(now())
                 .errorCode(INVALID_ID_FORMAT)
-                .path("uri=/api/v1/genres/" + invalidUUIDFormat)
+                .path(STR."uri=\{GENRE_BASE_URL}/\{invalidUUIDFormat}")
                 .message(message)
                 .build();
         given(genreService.updateGenre(anyString(), any(GenreUpdateRequestDto.class)))

@@ -66,12 +66,12 @@ public class Movie implements Serializable {
     }
 
     public void addCharacterToList(Character character) {
-        if (Objects.nonNull(character) && !this.characters.contains(character))
+        if (Objects.nonNull(character) && !getCharacters().contains(character))
             this.getCharacters().add(character);
     }
 
     public void removeCharacterFromList(Character character) {
-        if (Objects.nonNull(character) && this.characters.contains(character))
+        if (Objects.nonNull(character) && getCharacters().contains(character))
             this.getCharacters().remove(character);
     }
 

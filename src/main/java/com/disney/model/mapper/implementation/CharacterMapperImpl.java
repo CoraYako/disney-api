@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
-import java.util.stream.Collectors;
+import static java.util.stream.Collectors.toUnmodifiableSet;
 
 @Component
 @Validated
@@ -34,28 +34,26 @@ public class CharacterMapperImpl implements CharacterMapper {
 
     @Override
     public CharacterResponseDto toDTO(Character entity) {
-        return new CharacterResponseDto(
-                entity.getId().toString(),
-                entity.getImage(),
-                entity.getName(),
-                entity.getAge(),
-                entity.getWeight(),
-                entity.getHistory(),
-                entity.getMovies().stream()
-                        .map(movieMapper::toBasicInfoDTO)
-                        .collect(Collectors.toUnmodifiableSet())
-        );
+        return CharacterResponseDto.builder()
+                .id(entity.getId().toString())
+                .image(entity.getImage())
+                .name(entity.getName())
+                .age(entity.getAge())
+                .weight(entity.getWeight())
+                .history(entity.getHistory())
+                .movies(entity.getMovies().stream().map(movieMapper::toBasicInfoDTO).collect(toUnmodifiableSet()))
+                .build();
     }
 
     @Override
     public CharacterBasicResponseDto toBasicDTO(Character entity) {
-        return new CharacterBasicResponseDto(
-                entity.getId().toString(),
-                entity.getImage(),
-                entity.getName(),
-                entity.getAge(),
-                entity.getWeight(),
-                entity.getHistory()
-        );
+        return CharacterBasicResponseDto.builder()
+                .id(entity.getId().toString())
+                .image(entity.getImage())
+                .name(entity.getName())
+                .age(entity.getAge())
+                .weight(entity.getWeight())
+                .history(entity.getHistory())
+                .build();
     }
 }

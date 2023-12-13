@@ -1,6 +1,7 @@
-package com.disney.repository;
+package com.disney.unit.repository;
 
 import com.disney.model.entity.Character;
+import com.disney.repository.CharacterRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
