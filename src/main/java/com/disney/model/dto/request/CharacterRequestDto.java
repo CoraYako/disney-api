@@ -23,4 +23,50 @@ public record CharacterRequestDto(
         String history,
         Set<String> moviesId
 ) {
+    public static CharacterRequestDtoBuilder builder() {
+        return new CharacterRequestDtoBuilder();
+    }
+
+    public static class CharacterRequestDtoBuilder {
+        private String image;
+        private String name;
+        private int age;
+        private double weight;
+        private String history;
+        private Set<String> moviesId;
+
+        public CharacterRequestDtoBuilder image(String image) {
+            this.image = image;
+            return this;
+        }
+
+        public CharacterRequestDtoBuilder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public CharacterRequestDtoBuilder age(int age) {
+            this.age = age;
+            return this;
+        }
+
+        public CharacterRequestDtoBuilder weight(double weight) {
+            this.weight = weight;
+            return this;
+        }
+
+        public CharacterRequestDtoBuilder history(String history) {
+            this.history = history;
+            return this;
+        }
+
+        public CharacterRequestDtoBuilder moviesId(Set<String> moviesId) {
+            this.moviesId = moviesId;
+            return this;
+        }
+
+        public CharacterRequestDto build() {
+            return new CharacterRequestDto(image, name, age, weight, history, moviesId);
+        }
+    }
 }
