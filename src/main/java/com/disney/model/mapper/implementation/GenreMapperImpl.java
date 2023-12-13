@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
-import java.util.stream.Collectors;
+import static java.util.stream.Collectors.toUnmodifiableSet;
 
 @Component
 @Validated
@@ -30,20 +30,18 @@ public class GenreMapperImpl implements GenreMapper {
 
     @Override
     public GenreResponseDto toDTO(Genre entity) {
-        return new GenreResponseDto(
-                entity.getId().toString(),
-                entity.getName(),
-                entity.getMovies().stream()
-                        .map(movieMapper::toBasicDTO)
-                        .collect(Collectors.toUnmodifiableSet())
-        );
+        return GenreResponseDto.builder()
+                .id(entity.getId().toString())
+                .name(entity.getName())
+                .movies(entity.getMovies().stream().map(movieMapper::toBasicDTO).collect(toUnmodifiableSet()))
+                .build();
     }
 
     @Override
     public GenreBasicResponseDto toBasicDTO(Genre entity) {
-        return new GenreBasicResponseDto(
-                entity.getId().toString(),
-                entity.getName()
-        );
+        return GenreBasicResponseDto.builder()
+                .id(entity.getId().toString())
+                .name(entity.getName())
+                .build();
     }
 }
