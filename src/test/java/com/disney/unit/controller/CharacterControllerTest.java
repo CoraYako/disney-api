@@ -1,5 +1,6 @@
-package com.disney.controller;
+package com.disney.unit.controller;
 
+import com.disney.controller.CharacterController;
 import com.disney.model.InvalidUUIDFormatException;
 import com.disney.model.dto.request.CharacterRequestDto;
 import com.disney.model.dto.request.CharacterUpdateRequestDto;
@@ -23,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -64,17 +66,23 @@ public class CharacterControllerTest {
 
     @BeforeEach
     void setUp() {
-        createCharacterRequest = new CharacterRequestDto(
-                "character-image.jpg",
-                "Character Name",
-                29,
-                89.9,
-                "Character History",
-                emptySet()
-        );
-        updateCharacterRequest = new CharacterUpdateRequestDto(
-                "new-image", "New Name", 100, 80.5, "New history", emptySet(), emptySet()
-        );
+        createCharacterRequest = CharacterRequestDto.builder()
+                .image("character-image.jpg")
+                .name("Character Name")
+                .age(29)
+                .weight(89.9)
+                .history("Character History")
+                .moviesId(emptySet())
+                .build();
+        updateCharacterRequest = CharacterUpdateRequestDto.builder()
+                .image("new-image")
+                .name("New Name")
+                .age(100)
+                .weight(80.5)
+                .history("New history")
+                .moviesWhereAppears(emptySet())
+                .moviesToUnlink(emptySet())
+                .build();
     }
 
     @DisplayName(value = "JUnit Test for successfully create a Character")
@@ -95,18 +103,19 @@ public class CharacterControllerTest {
     @DisplayName(value = "JUnit Test for create Character null or empty required values")
     @Test
     public void givenRequestWithoutRequiredValues_whenTryToCreateCharacter_thenStatusIsBadRequest() throws Exception {
-        final String msgEmptyName = "The name can't be empty or null";
-        final String msgBlankName = "The name can't be whitespaces";
-        final String msgNullAge = "The age can't be null";
-        final String msgMinAge = "Positive numbers only, minimum is 1";
-        final String msgNullWeight = "The weight can't be null";
-        final String msgMinWeight = "Positive numbers only, minimum is 1";
-        final String msgEmptyHistory = "The history can't be empty or null";
-        final String msgBlankHistory = "The history can't be whitespaces";
+        final Map<Integer, String> errors = Map.of(
+                1, "The name can't be empty or null", // empty name
+                2, "The name can't be whitespaces", // blank name
+                3, "The age can't be null", // not null age
+                4, "Positive numbers only, minimum is 1", // min value of age
+                5, "The weight can't be null", // not null weight
+                6, "Positive numbers only, minimum is 1", // min value of weight
+                7, "The history can't be empty or null", // empty history
+                8, "The history can't be whitespaces" // blank history
+        );
 
         // given
-        @SuppressWarnings("DataFlowIssue") final CharacterRequestDto invalidRequest =
-                new CharacterRequestDto(null, null, 0, 0.0, null, emptySet());
+        final CharacterRequestDto invalidRequest = CharacterRequestDto.builder().build();
 
         // when
         ResultActions response = mockMvc.perform(post(CHARACTER_BASE_URL).contentType(APPLICATION_JSON)
@@ -116,10 +125,10 @@ public class CharacterControllerTest {
         then(characterService).shouldHaveNoInteractions();
         response.andDo(print())
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.name", anyOf(is(msgEmptyName), is(msgBlankName))))
-                .andExpect(jsonPath("$.age", anyOf(is(msgNullAge), is(msgMinAge))))
-                .andExpect(jsonPath("$.weight", anyOf(is(msgNullWeight), is(msgMinWeight))))
-                .andExpect(jsonPath("$.history", anyOf(is(msgEmptyHistory), is(msgBlankHistory))));
+                .andExpect(jsonPath("$.name", anyOf(is(errors.get(1)), is(errors.get(2)))))
+                .andExpect(jsonPath("$.age", anyOf(is(errors.get(3)), is(errors.get(4)))))
+                .andExpect(jsonPath("$.weight", anyOf(is(errors.get(5)), is(errors.get(6)))))
+                .andExpect(jsonPath("$.history", anyOf(is(errors.get(7)), is(errors.get(8)))));
     }
 
     @DisplayName(value = "JUnit Test for try to create Character without required body")
@@ -129,7 +138,7 @@ public class CharacterControllerTest {
         final ApiErrorResponse expectedResponse = ApiErrorResponse.builder()
                 .timestamp(now())
                 .errorCode(INVALID_REQUIRED_PAYLOAD)
-                .path("uri=" + CHARACTER_BASE_URL)
+                .path(STR."uri=\{CHARACTER_BASE_URL}")
                 .message("Required request body is missing")
                 .build();
 
@@ -150,11 +159,11 @@ public class CharacterControllerTest {
     @Test
     public void givenRequest_whenTryToCreateDuplicatedCharacter_thenStatusIsBadRequest() throws Exception {
         // given
-        final String errorMsg = "The character '%s' is already registered".formatted(createCharacterRequest.name());
+        final String errorMsg = STR."The character '\{createCharacterRequest.name()}' is already registered";
         final ApiErrorResponse expectedResponse = ApiErrorResponse.builder()
                 .timestamp(now())
                 .errorCode(DUPLICATED_RESOURCE)
-                .path("uri=" + CHARACTER_BASE_URL)
+                .path(STR."uri=\{CHARACTER_BASE_URL}")
                 .message(errorMsg)
                 .build();
         willThrow(new EntityExistsException(errorMsg)).given(characterService)
@@ -204,22 +213,24 @@ public class CharacterControllerTest {
         final int pageNumber = 0;
         final String characterName = "Character Name";
         final List<CharacterResponseDto> characterResponseDtoList = List.of(
-                new CharacterResponseDto(
-                        UUID.randomUUID().toString(),
-                        "character-image.jpg",
-                        characterName,
-                        31,
-                        90.5,
-                        "Some history context",
-                        emptySet()),
-                new CharacterResponseDto(
-                        UUID.randomUUID().toString(),
-                        "random-image.png",
-                        characterName,
-                        26,
-                        80.4,
-                        "History example",
-                        Set.of(mock(MovieBasicInfoResponseDto.class)))
+                CharacterResponseDto.builder()
+                        .id(UUID.randomUUID().toString())
+                        .image("character-image.jpg")
+                        .name(characterName)
+                        .age(31)
+                        .weight(90.5)
+                        .history("Some history context")
+                        .movies(emptySet())
+                        .build(),
+                CharacterResponseDto.builder()
+                        .id(UUID.randomUUID().toString())
+                        .image("random-image.png")
+                        .name(characterName)
+                        .age(26)
+                        .weight(80.4)
+                        .history("History example")
+                        .movies(Set.of(mock(MovieBasicInfoResponseDto.class)))
+                        .build()
         );
         final PageRequest pageable = PageRequest.of(pageNumber, ELEMENTS_PER_PAGE);
         final Page<CharacterResponseDto> responseList = new PageImpl<>(
@@ -245,15 +256,15 @@ public class CharacterControllerTest {
     public void givenUpdateRequestAndId_whenTryToUpdateCharacter_thenReturnCharacterUpdated() throws Exception {
         // given
         final String characterId = UUID.randomUUID().toString();
-        final CharacterResponseDto expectedResponse = new CharacterResponseDto(
-                characterId,
-                updateCharacterRequest.image(),
-                updateCharacterRequest.name(),
-                updateCharacterRequest.age(),
-                updateCharacterRequest.weight(),
-                updateCharacterRequest.history(),
-                emptySet()
-        );
+        final CharacterResponseDto expectedResponse = CharacterResponseDto.builder()
+                .id(characterId)
+                .image(updateCharacterRequest.image())
+                .name(updateCharacterRequest.name())
+                .age(updateCharacterRequest.age())
+                .weight(updateCharacterRequest.weight())
+                .history(updateCharacterRequest.history())
+                .movies(emptySet())
+                .build();
 
         given(characterService.updateCharacter(anyString(), any(CharacterUpdateRequestDto.class)))
                 .willReturn(expectedResponse);
@@ -280,11 +291,11 @@ public class CharacterControllerTest {
     public void givenRequestAndId_whenTryToUpdateAndCharacterIsNotPresent_thenStatusIsNotFound() throws Exception {
         // given
         final String characterId = UUID.randomUUID().toString();
-        final String errorMsg = "Character not found for ID %s".formatted(characterId);
+        final String errorMsg = STR."Character not found for ID \{characterId}";
         final ApiErrorResponse expectedResponse = ApiErrorResponse.builder()
                 .timestamp(now())
                 .errorCode(RESOURCE_NOT_FOUND)
-                .path("uri=" + CHARACTER_BASE_URL + '/' + characterId)
+                .path(STR."uri=\{CHARACTER_BASE_URL}/\{characterId}")
                 .message(errorMsg)
                 .build();
         given(characterService.updateCharacter(anyString(), any(CharacterUpdateRequestDto.class)))
@@ -308,12 +319,12 @@ public class CharacterControllerTest {
     @Test
     public void givenInvalidIdFormat_whenUpdateCharacter_thenStatusIsBadRequest() throws Exception {
         // given
-        final String invalidIdFormat = "null";
-        final String errorMsg = "Invalid UUID string: %s".formatted(invalidIdFormat);
+        final String invalidIdFormat = "123-456-789";
+        final String errorMsg = STR."Invalid UUID string: \{invalidIdFormat}";
         final ApiErrorResponse expectedResponse = ApiErrorResponse.builder()
                 .timestamp(now())
                 .errorCode(INVALID_ID_FORMAT)
-                .path("uri=" + CHARACTER_BASE_URL + '/' + invalidIdFormat)
+                .path(STR."uri=\{CHARACTER_BASE_URL}/\{invalidIdFormat}")
                 .message(errorMsg)
                 .build();
         given(characterService.updateCharacter(anyString(), any(CharacterUpdateRequestDto.class)))
@@ -341,7 +352,7 @@ public class CharacterControllerTest {
         final ApiErrorResponse expectedResponse = ApiErrorResponse.builder()
                 .timestamp(now())
                 .errorCode(INVALID_REQUIRED_PAYLOAD)
-                .path("uri=" + CHARACTER_BASE_URL + '/' + characterId)
+                .path(STR."uri=\{CHARACTER_BASE_URL}/\{characterId}")
                 .message("Required request body is missing")
                 .build();
 
@@ -377,12 +388,12 @@ public class CharacterControllerTest {
     @Test
     public void givenInvalidIdFormat_whenTryToDeleteCharacter_thenThrowsAndStatusIsBadRequest() throws Exception {
         // given
-        final String invalidIdFormat = "null";
-        final String errorMsg = "Invalid UUID string: %s".formatted(invalidIdFormat);
+        final String invalidIdFormat = "123-456-789";
+        final String errorMsg = STR."Invalid UUID string: \{invalidIdFormat}";
         final ApiErrorResponse expectedResponse = ApiErrorResponse.builder()
                 .timestamp(now())
                 .errorCode(INVALID_ID_FORMAT)
-                .path("uri=" + CHARACTER_BASE_URL + '/' + invalidIdFormat)
+                .path(STR."uri=\{CHARACTER_BASE_URL}/\{invalidIdFormat}")
                 .message(errorMsg)
                 .build();
         willThrow(new InvalidUUIDFormatException(errorMsg)).given(characterService).deleteCharacter(anyString());
@@ -405,11 +416,11 @@ public class CharacterControllerTest {
     public void givenCharacterId_whenTryToDeleteCharacter_thenThrowForNotPresentAndStatusIsNotFound() throws Exception {
         // given
         final String characterId = UUID.randomUUID().toString();
-        final String errorMsg = "Character not found for ID %s".formatted(characterId);
+        final String errorMsg = STR."Character not found for ID \{characterId}";
         final ApiErrorResponse expectedResponse = ApiErrorResponse.builder()
                 .timestamp(now())
                 .errorCode(RESOURCE_NOT_FOUND)
-                .path("uri=" + CHARACTER_BASE_URL + '/' + characterId)
+                .path(STR."uri=\{CHARACTER_BASE_URL}/\{characterId}")
                 .message(errorMsg)
                 .build();
         willThrow(new EntityNotFoundException(errorMsg)).given(characterService).deleteCharacter(anyString());
@@ -432,15 +443,16 @@ public class CharacterControllerTest {
     public void givenId_whenGetCharacterById_thenReturnTheCharacterAndStatusIsOk() throws Exception {
         // given
         final String characterId = UUID.randomUUID().toString();
-        final CharacterResponseDto expectedResponse = new CharacterResponseDto(
-                characterId,
-                "character-image.jpg",
-                "Character Name",
-                31,
-                92.5,
-                "Character history",
-                emptySet()
-        );
+        final CharacterResponseDto expectedResponse = CharacterResponseDto.builder()
+                .id(characterId)
+                .image("character-image.jpg")
+                .name("Character Name")
+                .age(31)
+                .weight(92.8)
+                .history("Character history")
+                .movies(emptySet())
+                .build();
+
         given(characterService.getCharacterById(anyString())).willReturn(expectedResponse);
 
         // when
@@ -464,11 +476,11 @@ public class CharacterControllerTest {
     public void givenInvalidIdFormat_whenTryToGetCharacterById_thenStatusIsBadRequest() throws Exception {
         // given
         final String invalidIdFormat = "null";
-        final String errorMsg = "Invalid UUID string: %s".formatted(invalidIdFormat);
+        final String errorMsg = STR."Invalid UUID string: \{invalidIdFormat}";
         final ApiErrorResponse expectedResponse = ApiErrorResponse.builder()
                 .timestamp(now())
                 .errorCode(INVALID_ID_FORMAT)
-                .path("uri=" + CHARACTER_BASE_URL + '/' + invalidIdFormat)
+                .path(STR."uri=\{CHARACTER_BASE_URL}/\{invalidIdFormat}")
                 .message(errorMsg)
                 .build();
         given(characterService.getCharacterById(anyString())).willThrow(new InvalidUUIDFormatException(errorMsg));
@@ -491,11 +503,11 @@ public class CharacterControllerTest {
     public void givenIn_whenTryToGetCharacterById_thenStatusIsNotFound() throws Exception {
         // given
         final String characterId = UUID.randomUUID().toString();
-        final String errorMsg = "Character not found for ID %s".formatted(characterId);
+        final String errorMsg = STR."Character not found for ID \{characterId}";
         final ApiErrorResponse expectedResponse = ApiErrorResponse.builder()
                 .timestamp(now())
                 .errorCode(RESOURCE_NOT_FOUND)
-                .path("uri=" + CHARACTER_BASE_URL + '/' + characterId)
+                .path(STR."uri=\{CHARACTER_BASE_URL}/\{characterId}")
                 .message(errorMsg)
                 .build();
         given(characterService.getCharacterById(anyString())).willThrow(new EntityNotFoundException(errorMsg));
