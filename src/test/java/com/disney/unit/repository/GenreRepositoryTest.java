@@ -1,6 +1,7 @@
-package com.disney.repository;
+package com.disney.unit.repository;
 
 import com.disney.model.entity.Genre;
+import com.disney.repository.GenreRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
